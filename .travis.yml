@@ -1,0 +1,10 @@
+language: java
+jdk:
+  - openjdk8
+cache:
+  directories:
+    - $HOME/.m2
+    - $HOME/.sonar/cache
+
+script:
+  - mvn clean package

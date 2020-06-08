@@ -1,0 +1,2 @@
+[![Build Status](https://travis-ci.org/davidepedone/spring-cursor-pagination.svg?branch=master)](https://travis-ci.org/davidepedone/spring-cursor-pagination)
+[![Known Vulnerabilities](https://snyk.io/test/github/davidepedone/spring-cursor-pagination/badge.svg?targetFile=pom.xml)](https://snyk.io/test/github/davidepedone/spring-cursor-pagination?targetFile=pom.xml)
