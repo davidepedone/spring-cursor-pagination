@@ -104,8 +104,8 @@ class SlicedResourcesAssemblerUnitTest {
 	@DisplayName("Next page link should contain continuationToken")
 	void nextPageLink() {
 		SlicedModel<EntityModel<Person>> resources = assembler.toModel(createSlice(5, "notarealtoken"));
-		assertThat(resources.getRequiredLink(IanaLinkRelations.NEXT).getHref()
-				.contains("continuationToken=notarealtoken"));
+		String href = resources.getRequiredLink(IanaLinkRelations.NEXT).getHref();
+		assertThat(href.contains("continuationToken=notarealtoken"));
 	}
 
 	private static CursorPaginationSlice<Person> createSlice(int size, String token) {

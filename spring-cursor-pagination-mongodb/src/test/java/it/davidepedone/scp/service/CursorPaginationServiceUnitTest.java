@@ -104,9 +104,9 @@ class CursorPaginationServiceUnitTest {
 			}
 		};
 		String onePart = personPaginationService.encrypt("justone", "key");
+		PersonSearchFilter filter = new PersonSearchFilter();
+		filter.setContinuationToken(onePart);
 		IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
-			PersonSearchFilter filter = new PersonSearchFilter();
-			filter.setContinuationToken(onePart);
 			personPaginationService.executeQuery(filter);
 		});
 		assertEquals("Can't modify search filter when using a continuationToken", thrown.getMessage());
@@ -123,9 +123,9 @@ class CursorPaginationServiceUnitTest {
 			}
 		};
 		String onePart = personPaginationService.encrypt("justone", "key");
+		PersonSearchFilter filter = new PersonSearchFilter();
+		filter.setContinuationToken(onePart);
 		CursorPaginationException thrown = assertThrows(CursorPaginationException.class, () -> {
-			PersonSearchFilter filter = new PersonSearchFilter();
-			filter.setContinuationToken(onePart);
 			personPaginationService.executeQuery(filter);
 		});
 		assertEquals("ContinuationToken was expected to have 2 or 4 parts, but got 1", thrown.getMessage());

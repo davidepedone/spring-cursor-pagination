@@ -88,7 +88,7 @@ public abstract class CursorPaginationService<T, V extends CursorPaginationSearc
 		Assert.notNull(this.persistentEntity, "PersistentEntity must not be null!");
 	}
 
-	public CursorPaginationSlice<T> executeQuery(V filter) throws IllegalArgumentException, CursorPaginationException {
+	public CursorPaginationSlice<T> executeQuery(V filter) throws CursorPaginationException {
 
 		boolean isSorted = StringUtils.hasText(filter.getSort());
 
@@ -233,6 +233,6 @@ public abstract class CursorPaginationService<T, V extends CursorPaginationSearc
 		}
 	}
 
-	abstract public void configSearchQuery(Query query, V filter);
+	public abstract void configSearchQuery(Query query, V filter);
 
 }

@@ -45,7 +45,7 @@ public class SlicedModel<T> extends CollectionModel<T> {
 	 * Default constructor to allow instantiation by reflection.
 	 */
 	protected SlicedModel() {
-		this(new ArrayList<T>(), null);
+		this(new ArrayList<>(), null);
 	}
 
 	/**
@@ -141,13 +141,13 @@ public class SlicedModel<T> extends CollectionModel<T> {
 			SlicedModel.SliceMetadata metadata) {
 
 		Assert.notNull(content, "Content must not be null!");
-		ArrayList<T> resources = new ArrayList<T>();
+		ArrayList<T> resources = new ArrayList<>();
 
 		for (S element : content) {
-			resources.add((T) new EntityModel<S>(element));
+			resources.add((T) EntityModel.of(element));
 		}
 
-		return new SlicedModel<T>(resources, metadata);
+		return new SlicedModel<>(resources, metadata);
 	}
 
 	/**
