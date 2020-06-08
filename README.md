@@ -1,2 +1,3 @@
 [![Build Status](https://travis-ci.org/davidepedone/spring-cursor-pagination.svg?branch=master)](https://travis-ci.org/davidepedone/spring-cursor-pagination)
+[![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=davidepedone_spring-cursor-pagination&metric=alert_status)](https://sonarcloud.io/dashboard?id=davidepedone_spring-cursor-pagination)
 [![Known Vulnerabilities](https://snyk.io/test/github/davidepedone/spring-cursor-pagination/badge.svg?targetFile=pom.xml)](https://snyk.io/test/github/davidepedone/spring-cursor-pagination?targetFile=pom.xml)
