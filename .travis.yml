@@ -9,6 +9,6 @@ addons:
   sonarcloud:
     organization: "davidepedone"
     token:
-      secure: SONAR_TOKEN
+      secure: "$SONAR_TOKEN"
 script:
   - mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar -Dsonar.projectKey=davidepedone_spring-cursor-pagination
