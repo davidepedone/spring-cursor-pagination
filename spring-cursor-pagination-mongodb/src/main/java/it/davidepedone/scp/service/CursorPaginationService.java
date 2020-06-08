@@ -28,6 +28,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.Base64Utils;
 import org.springframework.util.DigestUtils;
@@ -35,11 +36,10 @@ import org.springframework.util.StringUtils;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
@@ -54,7 +54,7 @@ public abstract class CursorPaginationService<T, V extends CursorPaginationSearc
 
 	private final List<String> sortableFields;
 
-	private final Duration queryDurationMaxTime;
+	private Duration queryDurationMaxTime;
 
 	private final String encryptionKey;
 
@@ -63,6 +63,8 @@ public abstract class CursorPaginationService<T, V extends CursorPaginationSearc
 	private final Class<T> tClass;
 
 	private final MongoPersistentEntity<?> persistentEntity;
+
+	private static final String CIPHER_ALG = "Blowfish";
 
 	public CursorPaginationService(MongoOperations mongoOperations, List<String> sortableFields, String encryptionKey,
 			Class<T> tClass) {
@@ -76,16 +78,8 @@ public abstract class CursorPaginationService<T, V extends CursorPaginationSearc
 		Assert.notNull(this.persistentEntity, "PersistentEntity must not be null!");
 	}
 
-	public CursorPaginationService(MongoOperations mongoOperations, List<String> sortableFields, String encryptionKey,
-			Class<T> tClass, Duration queryDurationMaxTime) {
-		this.mongoOperations = mongoOperations;
-		this.sortableFields = sortableFields;
+	public void setQueryDurationMaxTime(Duration queryDurationMaxTime) {
 		this.queryDurationMaxTime = queryDurationMaxTime;
-		this.encryptionKey = encryptionKey;
-		this.tClass = tClass;
-		this.classTypeInformation = ClassTypeInformation.from(tClass);
-		this.persistentEntity = mongoOperations.getConverter().getMappingContext().getPersistentEntity(tClass);
-		Assert.notNull(this.persistentEntity, "PersistentEntity must not be null!");
 	}
 
 	public CursorPaginationSlice<T> executeQuery(V filter) throws CursorPaginationException {
@@ -105,7 +99,7 @@ public abstract class CursorPaginationService<T, V extends CursorPaginationSearc
 		String hashed = getHash(filter);
 
 		if (StringUtils.hasText(filter.getContinuationToken())) {
-			String decoded = decrypt(filter.getContinuationToken(), encryptionKey);
+			String decoded = decrypt(filter.getContinuationToken());
 			log.debug("Decoded continuationToken: {}", decoded);
 			String[] params = decoded.split("_");
 
@@ -137,22 +131,18 @@ public abstract class CursorPaginationService<T, V extends CursorPaginationSearc
 				String paramValueAsString = params[3];
 
 				TypeInformation<?> typeInformation = classTypeInformation.getProperty(paramName);
-
-				Object paramValue = "null".equals(paramValueAsString) ? null
-						: mongoOperations.getConverter().convertToMongoType(paramValueAsString, typeInformation);
+				Object paramValue = getParamValue(paramValueAsString, typeInformation);
 
 				Criteria criteria = new Criteria();
-				List<Criteria> or = new ArrayList<>();
 				if (Sort.Direction.DESC.equals(filter.getDirection())) {
-					or.add(where(paramName).is(paramValue).and("_id").lt(new ObjectId(id)));
-					Optional.ofNullable(paramValue).ifPresent(v -> or.add(where(paramName).lt(v)));
+					criteria.orOperator(where(paramName).is(paramValue).and("_id").lt(new ObjectId(id)),
+							where(paramName).lt(paramValue));
 				}
 				else {
-					// TODO test
-					or.add(where(paramName).is(paramValue).and("_id").gt(new ObjectId(id)));
-					Optional.ofNullable(paramValue).ifPresent(v -> or.add(where(paramName).gt(v)));
+					criteria.orOperator(where(paramName).is(paramValue).and("_id").gt(new ObjectId(id)),
+							where(paramName).gt(paramValue));
 				}
-				query.addCriteria(criteria.orOperator(or.toArray(new Criteria[0])));
+				query.addCriteria(criteria);
 			}
 		}
 		query.limit(filter.getSize() + 1);
@@ -184,11 +174,24 @@ public abstract class CursorPaginationService<T, V extends CursorPaginationSearc
 				Object sortValue = getValue(persistentEntity.getPersistentProperty(filter.getSort()), last);
 				plainToken += "_" + filter.getSort() + "_" + sortValue;
 			}
-			log.trace("Token: {}", plainToken);
-			continuationToken = encrypt(plainToken, encryptionKey);
+			log.debug("Plain continuationToken: {}", plainToken);
+			continuationToken = encrypt(plainToken);
 		}
 
 		return new CursorPaginationSlice<>(toReturn, filter.getSize(), continuationToken);
+	}
+
+	protected Object getParamValue(String paramValueAsString, TypeInformation<?> typeInformation)
+			throws CursorPaginationException {
+		try {
+			Class<?> type = Objects.requireNonNull(typeInformation).getType();
+			Object paramValue = type.isAssignableFrom(Date.class) ? new Date(Long.parseLong(paramValueAsString))
+					: mongoOperations.getConverter().convertToMongoType(paramValueAsString, typeInformation);
+			return Objects.requireNonNull(paramValue);
+		}
+		catch (Exception e) {
+			throw new CursorPaginationException("Error getting parameter value: " + e.getMessage(), e);
+		}
 	}
 
 	protected String getHash(V filter) {
@@ -196,19 +199,44 @@ public abstract class CursorPaginationService<T, V extends CursorPaginationSearc
 				.md5DigestAsHex((filter.toString() + filter.getSort() + filter.getDirection().name()).getBytes());
 	}
 
-	protected Object getValue(MongoPersistentProperty prop, T entity) throws CursorPaginationException {
+	/**
+	 * This method takes a {@MongoPersistentProperty} and an entity to retrieve the value
+	 * necessary to build the continuation token using reflection. If the property is
+	 * instance of a {@java.util.Date} returns the timestamp representing the value. Null
+	 * is not an option because can produce unexpected pagination results in some edge
+	 * cases.
+	 * @param prop
+	 * @param entity
+	 * @return
+	 * @throws CursorPaginationException if reflection fails or if value to be returned is
+	 * null
+	 */
+	protected Object getValue(@Nullable MongoPersistentProperty prop, T entity) throws CursorPaginationException {
+		if (prop == null) {
+			throw new CursorPaginationException("PersistentProperty is null");
+		}
+		Method getter = prop.getGetter();
+		if (getter == null) {
+			throw new CursorPaginationException("No getter found for property " + prop.getFieldName());
+		}
+		Object object;
 		try {
-			return Objects.requireNonNull(prop.getGetter()).invoke(entity);
+			object = getter.invoke(entity);
 		}
-		catch (Exception e) {
-			throw new CursorPaginationException("Error getting value for property " + prop.getFieldName(), e);
+		catch (IllegalAccessException | InvocationTargetException e) {
+			throw new CursorPaginationException(
+					"Error invoking getter " + getter.getName() + " for property " + prop.getFieldName());
 		}
+		if (object == null) {
+			throw new CursorPaginationException("Null value not allowed for property " + prop.getFieldName());
+		}
+		return (object instanceof Date) ? ((Date) object).getTime() : object;
 	}
 
-	protected String encrypt(String strToEncrypt, String secret) throws CursorPaginationException {
+	protected String encrypt(String strToEncrypt) throws CursorPaginationException {
 		try {
-			SecretKeySpec skeyspec = new SecretKeySpec(secret.getBytes(), "Blowfish");
-			Cipher cipher = Cipher.getInstance("Blowfish");
+			SecretKeySpec skeyspec = new SecretKeySpec(encryptionKey.getBytes(), CIPHER_ALG);
+			Cipher cipher = Cipher.getInstance(CIPHER_ALG);
 			cipher.init(Cipher.ENCRYPT_MODE, skeyspec);
 			byte[] encrypted = cipher.doFinal(strToEncrypt.getBytes());
 			return Base64Utils.encodeToUrlSafeString(encrypted);
@@ -219,10 +247,10 @@ public abstract class CursorPaginationService<T, V extends CursorPaginationSearc
 		}
 	}
 
-	protected String decrypt(String strToDecrypt, String secret) throws CursorPaginationException {
+	protected String decrypt(String strToDecrypt) throws CursorPaginationException {
 		try {
-			SecretKeySpec skeyspec = new SecretKeySpec(secret.getBytes(), "Blowfish");
-			Cipher cipher = Cipher.getInstance("Blowfish");
+			SecretKeySpec skeyspec = new SecretKeySpec(encryptionKey.getBytes(), CIPHER_ALG);
+			Cipher cipher = Cipher.getInstance(CIPHER_ALG);
 			cipher.init(Cipher.DECRYPT_MODE, skeyspec);
 			byte[] decrypted = cipher.doFinal(Base64Utils.decodeFromUrlSafeString(strToDecrypt));
 			return new String(decrypted);

@@ -103,7 +103,7 @@ class CursorPaginationServiceUnitTest {
 				return "expected";
 			}
 		};
-		String onePart = personPaginationService.encrypt("justone", "key");
+		String onePart = personPaginationService.encrypt("tampered");
 		PersonSearchFilter filter = new PersonSearchFilter();
 		filter.setContinuationToken(onePart);
 		IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
@@ -122,7 +122,7 @@ class CursorPaginationServiceUnitTest {
 				return "justone";
 			}
 		};
-		String onePart = personPaginationService.encrypt("justone", "key");
+		String onePart = personPaginationService.encrypt("justone");
 		PersonSearchFilter filter = new PersonSearchFilter();
 		filter.setContinuationToken(onePart);
 		CursorPaginationException thrown = assertThrows(CursorPaginationException.class, () -> {
@@ -137,7 +137,7 @@ class CursorPaginationServiceUnitTest {
 		PersonPaginationService personPaginationService = new PersonPaginationService(mongoOperations,
 				Arrays.asList("birhday", "age"), "key", Person.class);
 		CursorPaginationException thrown = assertThrows(CursorPaginationException.class, () -> {
-			personPaginationService.encrypt(null, "key");
+			personPaginationService.encrypt(null);
 		});
 		assertEquals("Error encrypting token", thrown.getMessage());
 	}
@@ -147,9 +147,12 @@ class CursorPaginationServiceUnitTest {
 	void decryptTokenError() throws Exception {
 		PersonPaginationService personPaginationService = new PersonPaginationService(mongoOperations,
 				Arrays.asList("birhday", "age"), "key", Person.class);
-		String token = personPaginationService.encrypt("justone", "key");
+		String token = personPaginationService.encrypt("justone");
+		// use a different encryptionKey
+		PersonPaginationService personPaginationService2 = new PersonPaginationService(mongoOperations,
+				Arrays.asList("birhday", "age"), "abrandnewkey", Person.class);
 		CursorPaginationException thrown = assertThrows(CursorPaginationException.class, () -> {
-			personPaginationService.decrypt(token, "notthesamekeyusedforencrypt");
+			personPaginationService2.decrypt(token);
 		});
 		assertEquals("Error decrypting token", thrown.getMessage());
 	}
@@ -188,7 +191,8 @@ class CursorPaginationServiceUnitTest {
 	@DisplayName("Set a query timeout when queryDurationMaxTime is not null")
 	void timeoutSet() {
 		PersonPaginationService personPaginationService = new PersonPaginationService(mongoOperations,
-				Arrays.asList("birhday", "age"), "encrypt", Person.class, Duration.of(1, ChronoUnit.SECONDS));
+				Arrays.asList("birhday", "age"), "encrypt", Person.class);
+		personPaginationService.setQueryDurationMaxTime(Duration.of(1, ChronoUnit.SECONDS));
 		ArgumentCaptor<Query> argumentCaptor = ArgumentCaptor.forClass(Query.class);
 		try {
 			personPaginationService.executeQuery(new PersonSearchFilter());
@@ -264,7 +268,7 @@ class CursorPaginationServiceUnitTest {
 			PersonSearchFilter filter = new PersonSearchFilter();
 			ObjectId anObjectId = new ObjectId();
 			String continuationToken = String.format("prevhash_%s", anObjectId);
-			filter.setContinuationToken(personPaginationService.encrypt(continuationToken, "encrypt"));
+			filter.setContinuationToken(personPaginationService.encrypt(continuationToken));
 			personPaginationService.executeQuery(filter);
 			verify(mongoOperations).find(argumentCaptor.capture(), eq(Person.class));
 			Query executedQuery = argumentCaptor.getValue();
@@ -299,7 +303,7 @@ class CursorPaginationServiceUnitTest {
 			filter.setDirection(Sort.Direction.ASC);
 			ObjectId anObjectId = new ObjectId();
 			String continuationToken = String.format("prevhash_%s", anObjectId);
-			filter.setContinuationToken(personPaginationService.encrypt(continuationToken, "encrypt"));
+			filter.setContinuationToken(personPaginationService.encrypt(continuationToken));
 			personPaginationService.executeQuery(filter);
 			verify(mongoOperations).find(argumentCaptor.capture(), eq(Person.class));
 			Query executedQuery = argumentCaptor.getValue();
@@ -390,7 +394,7 @@ class CursorPaginationServiceUnitTest {
 			filter.setDirection(Sort.Direction.ASC);
 			ObjectId anObjectId = new ObjectId();
 			String continuationToken = String.format("prevhash_%s_age_10", anObjectId);
-			filter.setContinuationToken(personPaginationService.encrypt(continuationToken, "encrypt"));
+			filter.setContinuationToken(personPaginationService.encrypt(continuationToken));
 
 			personPaginationService.executeQuery(filter);
 			verify(mongoOperations).find(argumentCaptor.capture(), eq(Person.class));
@@ -435,7 +439,7 @@ class CursorPaginationServiceUnitTest {
 			filter.setDirection(Sort.Direction.DESC);
 			ObjectId anObjectId = new ObjectId();
 			String continuationToken = String.format("prevhash_%s_age_10", anObjectId);
-			filter.setContinuationToken(personPaginationService.encrypt(continuationToken, "encrypt"));
+			filter.setContinuationToken(personPaginationService.encrypt(continuationToken));
 
 			personPaginationService.executeQuery(filter);
 			verify(mongoOperations).find(argumentCaptor.capture(), eq(Person.class));
@@ -506,7 +510,7 @@ class CursorPaginationServiceUnitTest {
 			assertTrue(slice.hasNext());
 			assertTrue(slice.hasContent());
 			assertEquals(2, slice.getContent().size());
-			String decodedToken = personPaginationService.decrypt(slice.getContinuationToken(), "encrypt");
+			String decodedToken = personPaginationService.decrypt(slice.getContinuationToken());
 			assertEquals(2, decodedToken.split("_").length);
 			assertEquals("mockhash_mockvalue", decodedToken);
 		}
@@ -560,7 +564,7 @@ class CursorPaginationServiceUnitTest {
 			assertTrue(slice.hasNext());
 			assertTrue(slice.hasContent());
 			assertEquals(2, slice.getContent().size());
-			String decodedToken = personPaginationService.decrypt(slice.getContinuationToken(), "encrypt");
+			String decodedToken = personPaginationService.decrypt(slice.getContinuationToken());
 			assertEquals(4, decodedToken.split("_").length);
 			assertEquals("mockhash_mockvalue_age_mockvalue", decodedToken);
 		}

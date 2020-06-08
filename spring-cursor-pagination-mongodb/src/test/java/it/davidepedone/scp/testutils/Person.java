@@ -15,8 +15,6 @@
  */
 package it.davidepedone.scp.testutils;
 
-import it.davidepedone.scp.service.CursorPaginationService;
-import lombok.Data;
 import org.springframework.data.annotation.Id;
 
 import java.util.Date;
@@ -26,7 +24,6 @@ import java.util.Date;
  *
  * @author Davide Pedone
  */
-@Data
 public class Person {
 
 	@Id
@@ -37,5 +34,73 @@ public class Person {
 	Date birthday;
 
 	int age;
+
+	Long timestamp;
+
+	String noGetterField;
+
+	String exceptionGetterField;
+
+	String nullField;
+
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public Date getBirthday() {
+		return birthday;
+	}
+
+	public void setBirthday(Date birthday) {
+		this.birthday = birthday;
+	}
+
+	public int getAge() {
+		return age;
+	}
+
+	public void setAge(int age) {
+		this.age = age;
+	}
+
+	public Long getTimestamp() {
+		return timestamp;
+	}
+
+	public void setTimestamp(Long timestamp) {
+		this.timestamp = timestamp;
+	}
+
+	public void setNoGetterField(String noGetterField) {
+		this.noGetterField = noGetterField;
+	}
+
+	public String getExceptionGetterField() {
+		throw new NullPointerException();
+	}
+
+	public void setExceptionGetterField(String exceptionGetterField) {
+		this.exceptionGetterField = exceptionGetterField;
+	}
+
+	public String getNullField() {
+		return null;
+	}
+
+	public void setNullField(String nullField) {
+		this.nullField = nullField;
+	}
 
 }

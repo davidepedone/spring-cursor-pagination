@@ -16,12 +16,9 @@
 package it.davidepedone.scp.config;
 
 import it.davidepedone.scp.hateoas.SlicedResourcesAssembler;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.web.HateoasPageableHandlerMethodArgumentResolver;
-
-import java.util.Optional;
 
 /**
  * JavaConfig class to register {@link SlicedResourcesAssembler}
@@ -32,12 +29,10 @@ import java.util.Optional;
 @Configuration
 public class SpringCursorPaginationHateoasConfiguration {
 
-	@Autowired
-	Optional<HateoasPageableHandlerMethodArgumentResolver> pageableResolver;
-
 	@Bean
-	public SlicedResourcesAssembler<?> slicedResourcesAssembler() {
-		return new SlicedResourcesAssembler<>(pageableResolver.orElse(null), null);
+	public SlicedResourcesAssembler<?> slicedResourcesAssembler(
+			HateoasPageableHandlerMethodArgumentResolver pageableResolver) {
+		return new SlicedResourcesAssembler<>(pageableResolver, null);
 	}
 
 }

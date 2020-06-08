@@ -33,6 +33,7 @@ import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Unit tests for {@link SlicedResourcesAssembler}.
@@ -105,7 +106,7 @@ class SlicedResourcesAssemblerUnitTest {
 	void nextPageLink() {
 		SlicedModel<EntityModel<Person>> resources = assembler.toModel(createSlice(5, "notarealtoken"));
 		String href = resources.getRequiredLink(IanaLinkRelations.NEXT).getHref();
-		assertThat(href.contains("continuationToken=notarealtoken"));
+		assertTrue(href.contains("continuationToken=notarealtoken"));
 	}
 
 	private static CursorPaginationSlice<Person> createSlice(int size, String token) {

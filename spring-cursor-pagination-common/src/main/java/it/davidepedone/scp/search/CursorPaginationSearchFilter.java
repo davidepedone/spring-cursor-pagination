@@ -29,7 +29,7 @@ public abstract class CursorPaginationSearchFilter {
 
 	private String continuationToken;
 
-	private int size = 1;
+	private int size = 20;
 
 	private String sort;
 

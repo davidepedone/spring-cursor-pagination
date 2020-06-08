@@ -34,4 +34,8 @@ public class PersonSearchFilter extends CursorPaginationSearchFilter {
 
 	private Integer age;
 
+	public PersonSearchFilter() {
+		super.setSize(1);
+	}
+
 }

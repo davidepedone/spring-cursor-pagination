@@ -19,6 +19,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.data.domain.Sort.Direction.DESC;
 
 /**
@@ -33,8 +34,24 @@ class CursorPaginationSearchFilterUnitTest {
 	void defaultValues() {
 		CursorPaginationSearchFilter searchFilter = new CursorPaginationSearchFilter() {
 		};
-		assertEquals(1, searchFilter.getSize(), "Default size");
+		assertEquals(20, searchFilter.getSize(), "Default size");
 		assertEquals(DESC, searchFilter.getDirection(), "Default direction");
+	}
+
+	@Test
+	void allowNullContinuationToken() {
+		CursorPaginationSearchFilter searchFilter = new CursorPaginationSearchFilter() {
+		};
+		searchFilter.setContinuationToken(null);
+		assertNull(searchFilter.getContinuationToken());
+	}
+
+	@Test
+	void allowNullSortField() {
+		CursorPaginationSearchFilter searchFilter = new CursorPaginationSearchFilter() {
+		};
+		searchFilter.setSort(null);
+		assertNull(searchFilter.getSort());
 	}
 
 }

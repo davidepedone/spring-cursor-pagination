@@ -19,7 +19,6 @@ import it.davidepedone.scp.service.CursorPaginationService;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Query;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,11 +34,6 @@ public class PersonPaginationService extends CursorPaginationService<Person, Per
 	public PersonPaginationService(MongoOperations mongoOperations, List sortableFields, String encryptionKey,
 			Class aClass) {
 		super(mongoOperations, sortableFields, encryptionKey, aClass);
-	}
-
-	public PersonPaginationService(MongoOperations mongoOperations, List<String> sortableFields, String encryptionKey,
-			Class<Person> personClass, Duration queryDurationMaxTime) {
-		super(mongoOperations, sortableFields, encryptionKey, personClass, queryDurationMaxTime);
 	}
 
 	@Override
