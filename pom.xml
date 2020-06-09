@@ -5,7 +5,7 @@
     <groupId>it.davidepedone</groupId>
     <artifactId>spring-cursor-pagination</artifactId>
     <packaging>pom</packaging>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.1</version>
     <name>Spring cursor pagination</name>
     <description>Spring cursor pagination</description>
     <url>https://github.com/davidepedone/spring-cursor-pagination</url>
@@ -39,7 +39,7 @@
         <url>git@github.com:davidepedone/spring-cursor-pagination.git</url>
         <connection>scm:git:git@github.com:davidepedone/spring-cursor-pagination.git</connection>
         <developerConnection>scm:git:git@github.com:davidepedone/spring-cursor-pagination.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>v1.0.1</tag>
     </scm>
 
     <distributionManagement>
