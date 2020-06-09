@@ -188,8 +188,7 @@
                         <configuration>
                             <tagNameFormat>v@{project.version}</tagNameFormat>
                             <autoVersionSubmodules>true</autoVersionSubmodules>
-                            <useReleaseProfile>false</useReleaseProfile>
-                            <releaseProfiles>release</releaseProfiles>
+                            <useReleaseProfile>true</useReleaseProfile>
                             <goals>deploy</goals>
                         </configuration>
                     </plugin>

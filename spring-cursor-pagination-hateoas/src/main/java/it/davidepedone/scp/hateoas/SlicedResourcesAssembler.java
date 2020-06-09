@@ -62,7 +62,6 @@ public class SlicedResourcesAssembler<T>
 	 * to build the relevant previous and next links.
 	 * @param resolver hateoas resolver
 	 * @param baseUri can be {@literal null}.
-	 * @return SlicedResourcesAssembler
 	 */
 	public SlicedResourcesAssembler(@Nullable HateoasPageableHandlerMethodArgumentResolver resolver,
 			@Nullable UriComponents baseUri) {
@@ -103,6 +102,7 @@ public class SlicedResourcesAssembler<T>
 	 * resources.
 	 * @param slice must not be {@literal null}.
 	 * @param assembler must not be {@literal null}.
+	 * @param <R> class that extends RepresentationModel
 	 * @return SlicedModel
 	 */
 	public <R extends RepresentationModel<?>> SlicedModel<R> toModel(CursorPaginationSlice<T> slice,
@@ -118,6 +118,7 @@ public class SlicedResourcesAssembler<T>
 	 * @param slice must not be {@literal null}.
 	 * @param assembler must not be {@literal null}.
 	 * @param link must not be {@literal null}.
+	 * @param <R> class that extends RepresentationModel
 	 * @return SlicedModel
 	 */
 	public <R extends RepresentationModel<?>> SlicedModel<R> toModel(CursorPaginationSlice<T> slice,
@@ -175,6 +176,8 @@ public class SlicedResourcesAssembler<T>
 	 * @param metadata the calculated {@link SlicedModel.SliceMetadata}, must not be
 	 * {@literal null}.
 	 * @param page the original page handed to the assembler, must not be {@literal null}.
+	 * @param <R> class that extends RepresentationModel
+	 * @param <S> class of the entity
 	 * @return must not be {@literal null}.
 	 */
 	protected <R extends RepresentationModel<?>, S> SlicedModel<R> createPagedModel(List<R> resources,
@@ -292,7 +295,7 @@ public class SlicedResourcesAssembler<T>
 	 * Return the {@link MethodParameter} to be used to potentially qualify the paging and
 	 * sorting request parameters to. Default implementations returns {@literal null},
 	 * which means the parameters will not be qualified.
-	 * @return
+	 * @return null
 	 * @since 1.0
 	 */
 	@Nullable
