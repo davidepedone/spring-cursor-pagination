@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>it.davidepedone</groupId>
     <artifactId>spring-cursor-pagination</artifactId>
     <packaging>pom</packaging>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <name>Spring cursor pagination</name>
     <description>Spring cursor pagination</description>
     <url>https://github.com/davidepedone/spring-cursor-pagination</url>
@@ -41,7 +39,7 @@
         <url>git@github.com:davidepedone/spring-cursor-pagination.git</url>
         <connection>scm:git:git@github.com:davidepedone/spring-cursor-pagination.git</connection>
         <developerConnection>scm:git:git@github.com:davidepedone/spring-cursor-pagination.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>spring-cursor-pagination-1.0.0</tag>
     </scm>
 
     <distributionManagement>
