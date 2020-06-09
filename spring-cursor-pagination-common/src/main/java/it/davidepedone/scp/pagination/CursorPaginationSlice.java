@@ -62,7 +62,8 @@ public class CursorPaginationSlice<T> {
 	/**
 	 * Returns the continuationToken to access the next {@link CursorPaginationSlice}
 	 * whether there's one.
-	 * @return
+	 * @return Returns the continuationToken to access the next
+	 * {@link CursorPaginationSlice} whether there's one.
 	 */
 	public String getContinuationToken() {
 		return continuationToken;
@@ -86,7 +87,7 @@ public class CursorPaginationSlice<T> {
 
 	/**
 	 * Returns whether the {@link CursorPaginationSlice} has content at all.
-	 * @return
+	 * @return whether the {@link CursorPaginationSlice} has content at all.
 	 */
 	public boolean hasContent() {
 		return !content.isEmpty();
@@ -94,7 +95,7 @@ public class CursorPaginationSlice<T> {
 
 	/**
 	 * Returns the page content as {@link List}.
-	 * @return
+	 * @return the page content as {@link List}.
 	 */
 	public List<T> getContent() {
 		return Collections.unmodifiableList(content);

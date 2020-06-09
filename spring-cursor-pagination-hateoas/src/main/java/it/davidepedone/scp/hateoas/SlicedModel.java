@@ -19,7 +19,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.EqualsAndHashCode;
 import org.springframework.hateoas.CollectionModel;
-import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.hateoas.Link;
 import org.springframework.lang.Nullable;
@@ -77,8 +76,8 @@ public class SlicedModel<T> extends CollectionModel<T> {
 
 	/**
 	 * Creates a new empty collection model.
-	 * @param <T>
-	 * @return
+	 * @param <T> Entity
+	 * @return empty SlicedModel
 	 * @since 1.0
 	 */
 	public static <T> SlicedModel<T> empty() {
@@ -87,9 +86,9 @@ public class SlicedModel<T> extends CollectionModel<T> {
 
 	/**
 	 * Creates a new empty collection model with the given links.
-	 * @param <T>
+	 * @param <T> Entity
 	 * @param links must not be {@literal null}.
-	 * @return
+	 * @return empty SlicedModel
 	 * @since 1.0
 	 */
 	public static <T> SlicedModel<T> empty(Iterable<Link> links) {
@@ -100,7 +99,8 @@ public class SlicedModel<T> extends CollectionModel<T> {
 	 * Creates a new {@link SlicedModel} with the given content and metadata.
 	 * @param content must not be {@literal null}.
 	 * @param metadata the metadata to add to the {@link SlicedModel}.
-	 * @return
+	 * @param <T> Entity class
+	 * @return a new {@link SlicedModel} with the given content and metadata
 	 * @since 1.0
 	 */
 	public static <T> SlicedModel<T> of(Collection<T> content, SlicedModel.SliceMetadata metadata) {
@@ -113,7 +113,8 @@ public class SlicedModel<T> extends CollectionModel<T> {
 	 * @param content must not be {@literal null}.
 	 * @param metadata the metadata to add to the {@link SlicedModel}.
 	 * @param links the links to add to the {@link SlicedModel}.
-	 * @return
+	 * @param <T> Entity class
+	 * @return a new {@link SlicedModel} with the given content and metadata and Link
 	 */
 	public static <T> SlicedModel<T> of(Collection<T> content, SlicedModel.SliceMetadata metadata,
 			Iterable<Link> links) {
@@ -130,29 +131,8 @@ public class SlicedModel<T> extends CollectionModel<T> {
 	}
 
 	/**
-	 * Factory method to easily create a {@link SlicedModel} instance from a set of
-	 * entities and pagination metadata.
-	 * @param content must not be {@literal null}.
-	 * @param metadata
-	 * @return
-	 */
-	@SuppressWarnings("unchecked")
-	public static <T extends EntityModel<S>, S> SlicedModel<T> wrap(Iterable<S> content,
-			SlicedModel.SliceMetadata metadata) {
-
-		Assert.notNull(content, "Content must not be null!");
-		ArrayList<T> resources = new ArrayList<>();
-
-		for (S element : content) {
-			resources.add((T) EntityModel.of(element));
-		}
-
-		return new SlicedModel<>(resources, metadata);
-	}
-
-	/**
 	 * Returns the Link pointing to the next page (if set).
-	 * @return
+	 * @return the Link pointing to the next page
 	 */
 	@JsonIgnore
 	public Link getNextLink() {
@@ -161,7 +141,7 @@ public class SlicedModel<T> extends CollectionModel<T> {
 
 	/**
 	 * Returns the Link pointing to the current page (if set).
-	 * @return
+	 * @return the Link pointing to the current page
 	 */
 	@JsonIgnore
 	public Link getSelfLink() {
@@ -197,8 +177,8 @@ public class SlicedModel<T> extends CollectionModel<T> {
 		/**
 		 * Creates a new {@link SlicedModel.SliceMetadata} from the given size and
 		 * continuationToken.
-		 * @param size
-		 * @param continuationToken
+		 * @param size page size
+		 * @param continuationToken continuationToken to get the next page
 		 */
 		protected SliceMetadata(long size, @Nullable String continuationToken) {
 			Assert.isTrue(size > -1, "Size must not be negative!");

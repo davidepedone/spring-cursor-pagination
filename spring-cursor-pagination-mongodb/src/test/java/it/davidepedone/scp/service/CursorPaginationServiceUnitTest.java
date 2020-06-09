@@ -84,12 +84,12 @@ class CursorPaginationServiceUnitTest {
 	@DisplayName("Throws an exception when sorting on unindexed field")
 	void sorting() {
 		PersonPaginationService personPaginationService = new PersonPaginationService(mongoOperations,
-				Arrays.asList("birhday", "age"), "encrypt", Person.class);
+				Arrays.asList("birhday", "age"), Person.class);
 		PersonSearchFilter filter = new PersonSearchFilter();
 		filter.setSort("name");
 		filter.setDirection(Sort.Direction.ASC);
 		assertThrows(IllegalArgumentException.class, () -> {
-			personPaginationService.executeQuery(filter);
+			personPaginationService.executeQuery(filter, null);
 		});
 	}
 
@@ -97,7 +97,7 @@ class CursorPaginationServiceUnitTest {
 	@DisplayName("Throws an exception when search filter doesn't match previous request")
 	void hashCheck() throws Exception {
 		PersonPaginationService personPaginationService = new PersonPaginationService(mongoOperations,
-				Arrays.asList("birhday", "age"), "key", Person.class) {
+				Arrays.asList("birhday", "age"), Person.class) {
 			@Override
 			protected String getHash(PersonSearchFilter filter) {
 				return "expected";
@@ -107,7 +107,7 @@ class CursorPaginationServiceUnitTest {
 		PersonSearchFilter filter = new PersonSearchFilter();
 		filter.setContinuationToken(onePart);
 		IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
-			personPaginationService.executeQuery(filter);
+			personPaginationService.executeQuery(filter, null);
 		});
 		assertEquals("Can't modify search filter when using a continuationToken", thrown.getMessage());
 	}
@@ -116,7 +116,7 @@ class CursorPaginationServiceUnitTest {
 	@DisplayName("Throws an exception when continuationToken has unexpected number of parts")
 	void continuationTokenParts() throws Exception {
 		PersonPaginationService personPaginationService = new PersonPaginationService(mongoOperations,
-				Arrays.asList("birhday", "age"), "key", Person.class) {
+				Arrays.asList("birhday", "age"), Person.class) {
 			@Override
 			protected String getHash(PersonSearchFilter filter) {
 				return "justone";
@@ -126,16 +126,16 @@ class CursorPaginationServiceUnitTest {
 		PersonSearchFilter filter = new PersonSearchFilter();
 		filter.setContinuationToken(onePart);
 		CursorPaginationException thrown = assertThrows(CursorPaginationException.class, () -> {
-			personPaginationService.executeQuery(filter);
+			personPaginationService.executeQuery(filter, null);
 		});
 		assertEquals("ContinuationToken was expected to have 2 or 4 parts, but got 1", thrown.getMessage());
 	}
 
 	@Test
 	@DisplayName("Throws an exception when an error occurs encrypting token")
-	void encryptTokenError() throws Exception {
+	void encryptTokenError() {
 		PersonPaginationService personPaginationService = new PersonPaginationService(mongoOperations,
-				Arrays.asList("birhday", "age"), "key", Person.class);
+				Arrays.asList("birhday", "age"), Person.class);
 		CursorPaginationException thrown = assertThrows(CursorPaginationException.class, () -> {
 			personPaginationService.encrypt(null);
 		});
@@ -144,15 +144,11 @@ class CursorPaginationServiceUnitTest {
 
 	@Test
 	@DisplayName("Throws an exception when an error occurs decrypting token")
-	void decryptTokenError() throws Exception {
-		PersonPaginationService personPaginationService = new PersonPaginationService(mongoOperations,
-				Arrays.asList("birhday", "age"), "key", Person.class);
-		String token = personPaginationService.encrypt("justone");
-		// use a different encryptionKey
+	void decryptTokenError() {
 		PersonPaginationService personPaginationService2 = new PersonPaginationService(mongoOperations,
-				Arrays.asList("birhday", "age"), "abrandnewkey", Person.class);
+				Arrays.asList("birhday", "age"), Person.class);
 		CursorPaginationException thrown = assertThrows(CursorPaginationException.class, () -> {
-			personPaginationService2.decrypt(token);
+			personPaginationService2.decrypt(null);
 		});
 		assertEquals("Error decrypting token", thrown.getMessage());
 	}
@@ -161,10 +157,10 @@ class CursorPaginationServiceUnitTest {
 	@DisplayName("Throws an exception when query fails on database")
 	void mongoException() {
 		PersonPaginationService personPaginationService = new PersonPaginationService(mongoOperations,
-				Arrays.asList("birhday", "age"), "key", Person.class);
+				Arrays.asList("birhday", "age"), Person.class);
 		doThrow(new MongoException(10, "not a real message from mongodb")).when(mongoOperations).find(any(), any());
 		CursorPaginationException thrown = assertThrows(CursorPaginationException.class, () -> {
-			personPaginationService.executeQuery(new PersonSearchFilter());
+			personPaginationService.executeQuery(new PersonSearchFilter(), null);
 		});
 		assertEquals("Error executing query", thrown.getMessage());
 		assertTrue(thrown.getCause() instanceof MongoException);
@@ -174,10 +170,10 @@ class CursorPaginationServiceUnitTest {
 	@DisplayName("Don't set a query timeout when queryDurationMaxTime is null")
 	void timeout() {
 		PersonPaginationService personPaginationService = new PersonPaginationService(mongoOperations,
-				Arrays.asList("birhday", "age"), "encrypt", Person.class);
+				Arrays.asList("birhday", "age"), Person.class);
 		ArgumentCaptor<Query> argumentCaptor = ArgumentCaptor.forClass(Query.class);
 		try {
-			personPaginationService.executeQuery(new PersonSearchFilter());
+			personPaginationService.executeQuery(new PersonSearchFilter(), null);
 			verify(mongoOperations).find(argumentCaptor.capture(), eq(Person.class));
 			Query executedQuery = argumentCaptor.getValue();
 			assertNull(executedQuery.getMeta().getMaxTimeMsec());
@@ -191,11 +187,11 @@ class CursorPaginationServiceUnitTest {
 	@DisplayName("Set a query timeout when queryDurationMaxTime is not null")
 	void timeoutSet() {
 		PersonPaginationService personPaginationService = new PersonPaginationService(mongoOperations,
-				Arrays.asList("birhday", "age"), "encrypt", Person.class);
+				Arrays.asList("birhday", "age"), Person.class);
 		personPaginationService.setQueryDurationMaxTime(Duration.of(1, ChronoUnit.SECONDS));
 		ArgumentCaptor<Query> argumentCaptor = ArgumentCaptor.forClass(Query.class);
 		try {
-			personPaginationService.executeQuery(new PersonSearchFilter());
+			personPaginationService.executeQuery(new PersonSearchFilter(), null);
 			verify(mongoOperations).find(argumentCaptor.capture(), eq(Person.class));
 			Query executedQuery = argumentCaptor.getValue();
 			Long timeout = executedQuery.getMeta().getMaxTimeMsec();
@@ -211,10 +207,10 @@ class CursorPaginationServiceUnitTest {
 	@DisplayName("Properly configure query for first page with default sorting")
 	void baseQueryFirstPage() {
 		PersonPaginationService personPaginationService = new PersonPaginationService(mongoOperations,
-				Arrays.asList("birhday", "age"), "encrypt", Person.class);
+				Arrays.asList("birhday", "age"), Person.class);
 		ArgumentCaptor<Query> argumentCaptor = ArgumentCaptor.forClass(Query.class);
 		try {
-			personPaginationService.executeQuery(new PersonSearchFilter());
+			personPaginationService.executeQuery(new PersonSearchFilter(), null);
 			verify(mongoOperations).find(argumentCaptor.capture(), eq(Person.class));
 			Query executedQuery = argumentCaptor.getValue();
 			assertEquals(2, executedQuery.getLimit());
@@ -233,12 +229,12 @@ class CursorPaginationServiceUnitTest {
 	@DisplayName("Properly configure query for first page with default sorting ascending")
 	void baseQueryFirstPageAsc() {
 		PersonPaginationService personPaginationService = new PersonPaginationService(mongoOperations,
-				Arrays.asList("birhday", "age"), "encrypt", Person.class);
+				Arrays.asList("birhday", "age"), Person.class);
 		ArgumentCaptor<Query> argumentCaptor = ArgumentCaptor.forClass(Query.class);
 		try {
 			PersonSearchFilter filter = new PersonSearchFilter();
 			filter.setDirection(Sort.Direction.ASC);
-			personPaginationService.executeQuery(filter);
+			personPaginationService.executeQuery(filter, null);
 			verify(mongoOperations).find(argumentCaptor.capture(), eq(Person.class));
 			Query executedQuery = argumentCaptor.getValue();
 			assertEquals(2, executedQuery.getLimit());
@@ -257,7 +253,7 @@ class CursorPaginationServiceUnitTest {
 	@DisplayName("Properly configure query for nth page with default sorting")
 	void baseQueryNthPageDesc() {
 		PersonPaginationService personPaginationService = new PersonPaginationService(mongoOperations,
-				Arrays.asList("birhday", "age"), "encrypt", Person.class) {
+				Arrays.asList("birhday", "age"), Person.class) {
 			@Override
 			protected String getHash(PersonSearchFilter filter) {
 				return "prevhash";
@@ -269,7 +265,7 @@ class CursorPaginationServiceUnitTest {
 			ObjectId anObjectId = new ObjectId();
 			String continuationToken = String.format("prevhash_%s", anObjectId);
 			filter.setContinuationToken(personPaginationService.encrypt(continuationToken));
-			personPaginationService.executeQuery(filter);
+			personPaginationService.executeQuery(filter, null);
 			verify(mongoOperations).find(argumentCaptor.capture(), eq(Person.class));
 			Query executedQuery = argumentCaptor.getValue();
 			assertEquals(2, executedQuery.getLimit());
@@ -291,7 +287,7 @@ class CursorPaginationServiceUnitTest {
 	@DisplayName("Properly configure query for nth page with default sorting ascending")
 	void baseQueryNthPageAsc() {
 		PersonPaginationService personPaginationService = new PersonPaginationService(mongoOperations,
-				Arrays.asList("birhday", "age"), "encrypt", Person.class) {
+				Arrays.asList("birhday", "age"), Person.class) {
 			@Override
 			protected String getHash(PersonSearchFilter filter) {
 				return "prevhash";
@@ -304,7 +300,7 @@ class CursorPaginationServiceUnitTest {
 			ObjectId anObjectId = new ObjectId();
 			String continuationToken = String.format("prevhash_%s", anObjectId);
 			filter.setContinuationToken(personPaginationService.encrypt(continuationToken));
-			personPaginationService.executeQuery(filter);
+			personPaginationService.executeQuery(filter, null);
 			verify(mongoOperations).find(argumentCaptor.capture(), eq(Person.class));
 			Query executedQuery = argumentCaptor.getValue();
 			assertEquals(2, executedQuery.getLimit());
@@ -326,13 +322,13 @@ class CursorPaginationServiceUnitTest {
 	@DisplayName("Properly configure query for first page with custom sorting ascending")
 	void queryFirstPageWithSortingAsc() {
 		PersonPaginationService personPaginationService = new PersonPaginationService(mongoOperations,
-				Arrays.asList("birhday", "age"), "encrypt", Person.class);
+				Arrays.asList("birhday", "age"), Person.class);
 		ArgumentCaptor<Query> argumentCaptor = ArgumentCaptor.forClass(Query.class);
 		try {
 			PersonSearchFilter filter = new PersonSearchFilter();
 			filter.setSort("age");
 			filter.setDirection(Sort.Direction.ASC);
-			personPaginationService.executeQuery(filter);
+			personPaginationService.executeQuery(filter, null);
 			verify(mongoOperations).find(argumentCaptor.capture(), eq(Person.class));
 			Query executedQuery = argumentCaptor.getValue();
 			assertEquals(2, executedQuery.getLimit());
@@ -353,13 +349,13 @@ class CursorPaginationServiceUnitTest {
 	@DisplayName("Properly configure query for first page with custom sorting descending")
 	void queryFirstPageWithSortingDesc() {
 		PersonPaginationService personPaginationService = new PersonPaginationService(mongoOperations,
-				Arrays.asList("birhday", "age"), "encrypt", Person.class);
+				Arrays.asList("birhday", "age"), Person.class);
 		ArgumentCaptor<Query> argumentCaptor = ArgumentCaptor.forClass(Query.class);
 		try {
 			PersonSearchFilter filter = new PersonSearchFilter();
 			filter.setSort("age");
 			filter.setDirection(Sort.Direction.DESC);
-			personPaginationService.executeQuery(filter);
+			personPaginationService.executeQuery(filter, null);
 			verify(mongoOperations).find(argumentCaptor.capture(), eq(Person.class));
 			Query executedQuery = argumentCaptor.getValue();
 			assertEquals(2, executedQuery.getLimit());
@@ -380,7 +376,7 @@ class CursorPaginationServiceUnitTest {
 	@DisplayName("Properly configure query for nth page with custom sorting ascending")
 	void queryNthPageWithSortingAsc() {
 		PersonPaginationService personPaginationService = new PersonPaginationService(mongoOperations,
-				Arrays.asList("birhday", "age"), "encrypt", Person.class) {
+				Arrays.asList("birhday", "age"), Person.class) {
 			@Override
 			protected String getHash(PersonSearchFilter filter) {
 				return "prevhash";
@@ -396,7 +392,7 @@ class CursorPaginationServiceUnitTest {
 			String continuationToken = String.format("prevhash_%s_age_10", anObjectId);
 			filter.setContinuationToken(personPaginationService.encrypt(continuationToken));
 
-			personPaginationService.executeQuery(filter);
+			personPaginationService.executeQuery(filter, null);
 			verify(mongoOperations).find(argumentCaptor.capture(), eq(Person.class));
 			Query executedQuery = argumentCaptor.getValue();
 			assertEquals(2, executedQuery.getLimit());
@@ -425,7 +421,7 @@ class CursorPaginationServiceUnitTest {
 	@DisplayName("Properly configure query for nth page with custom sorting descending")
 	void queryNthPageWithSortingDesc() {
 		PersonPaginationService personPaginationService = new PersonPaginationService(mongoOperations,
-				Arrays.asList("birhday", "age"), "encrypt", Person.class) {
+				Arrays.asList("birhday", "age"), Person.class) {
 			@Override
 			protected String getHash(PersonSearchFilter filter) {
 				return "prevhash";
@@ -441,7 +437,7 @@ class CursorPaginationServiceUnitTest {
 			String continuationToken = String.format("prevhash_%s_age_10", anObjectId);
 			filter.setContinuationToken(personPaginationService.encrypt(continuationToken));
 
-			personPaginationService.executeQuery(filter);
+			personPaginationService.executeQuery(filter, null);
 			verify(mongoOperations).find(argumentCaptor.capture(), eq(Person.class));
 			Query executedQuery = argumentCaptor.getValue();
 			assertEquals(2, executedQuery.getLimit());
@@ -490,7 +486,7 @@ class CursorPaginationServiceUnitTest {
 		doReturn(Arrays.asList(p1, p2, p3)).when(mongoOperations).find(any(), any());
 
 		PersonPaginationService personPaginationService = new PersonPaginationService(mongoOperations,
-				Arrays.asList("birhday", "age"), "encrypt", Person.class) {
+				Arrays.asList("birhday", "age"), Person.class) {
 			@Override
 			protected String getHash(PersonSearchFilter filter) {
 				return "mockhash";
@@ -504,7 +500,7 @@ class CursorPaginationServiceUnitTest {
 		try {
 			PersonSearchFilter filter = new PersonSearchFilter();
 			filter.setSize(2);
-			CursorPaginationSlice<Person> slice = personPaginationService.executeQuery(filter);
+			CursorPaginationSlice<Person> slice = personPaginationService.executeQuery(filter, null);
 			assertNotNull(slice);
 			assertNotNull(slice.getContinuationToken());
 			assertTrue(slice.hasNext());
@@ -543,7 +539,7 @@ class CursorPaginationServiceUnitTest {
 		doReturn(Arrays.asList(p1, p2, p3)).when(mongoOperations).find(any(), any());
 
 		PersonPaginationService personPaginationService = new PersonPaginationService(mongoOperations,
-				Arrays.asList("birhday", "age"), "encrypt", Person.class) {
+				Arrays.asList("birhday", "age"), Person.class) {
 			@Override
 			protected String getHash(PersonSearchFilter filter) {
 				return "mockhash";
@@ -558,7 +554,7 @@ class CursorPaginationServiceUnitTest {
 			PersonSearchFilter filter = new PersonSearchFilter();
 			filter.setSize(2);
 			filter.setSort("age");
-			CursorPaginationSlice<Person> slice = personPaginationService.executeQuery(filter);
+			CursorPaginationSlice<Person> slice = personPaginationService.executeQuery(filter, null);
 			assertNotNull(slice);
 			assertNotNull(slice.getContinuationToken());
 			assertTrue(slice.hasNext());

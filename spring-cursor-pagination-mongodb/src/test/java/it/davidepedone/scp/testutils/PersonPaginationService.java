@@ -19,6 +19,7 @@ import it.davidepedone.scp.service.CursorPaginationService;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Query;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,13 +32,12 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
  */
 public class PersonPaginationService extends CursorPaginationService<Person, PersonSearchFilter> {
 
-	public PersonPaginationService(MongoOperations mongoOperations, List sortableFields, String encryptionKey,
-			Class aClass) {
-		super(mongoOperations, sortableFields, encryptionKey, aClass);
+	public PersonPaginationService(MongoOperations mongoOperations, List<String> sortableFields, Class<Person> aClass) {
+		super(mongoOperations, sortableFields, aClass);
 	}
 
 	@Override
-	public void configSearchQuery(Query query, PersonSearchFilter filter) {
+	public void configSearchQuery(Query query, PersonSearchFilter filter, Principal principal) {
 		Optional.ofNullable(filter.getAge()).ifPresent(age -> query.addCriteria(where("age").is(age)));
 		Optional.ofNullable(filter.getName()).ifPresent(name -> query.addCriteria(where("name").is(name)));
 	}

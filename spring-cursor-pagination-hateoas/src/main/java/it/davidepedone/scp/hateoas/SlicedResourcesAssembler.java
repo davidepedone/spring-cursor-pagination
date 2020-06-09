@@ -60,7 +60,9 @@ public class SlicedResourcesAssembler<T>
 	 * {@literal null}, a default one will be created. If the latter is {@literal null},
 	 * calls to {@link #toModel(CursorPaginationSlice)} will use the current request's URI
 	 * to build the relevant previous and next links.
+	 * @param resolver hateoas resolver
 	 * @param baseUri can be {@literal null}.
+	 * @return SlicedResourcesAssembler
 	 */
 	public SlicedResourcesAssembler(@Nullable HateoasPageableHandlerMethodArgumentResolver resolver,
 			@Nullable UriComponents baseUri) {
@@ -88,7 +90,7 @@ public class SlicedResourcesAssembler<T>
 	 * self link.
 	 * @param slice must not be {@literal null}.
 	 * @param selfLink must not be {@literal null}.
-	 * @return
+	 * @return SlicedModel
 	 */
 	public SlicedModel<EntityModel<T>> toModel(CursorPaginationSlice<T> slice, Link selfLink) {
 		return toModel(slice, EntityModel::of, selfLink);
@@ -101,7 +103,7 @@ public class SlicedResourcesAssembler<T>
 	 * resources.
 	 * @param slice must not be {@literal null}.
 	 * @param assembler must not be {@literal null}.
-	 * @return
+	 * @return SlicedModel
 	 */
 	public <R extends RepresentationModel<?>> SlicedModel<R> toModel(CursorPaginationSlice<T> slice,
 			RepresentationModelAssembler<T, R> assembler) {
@@ -116,7 +118,7 @@ public class SlicedResourcesAssembler<T>
 	 * @param slice must not be {@literal null}.
 	 * @param assembler must not be {@literal null}.
 	 * @param link must not be {@literal null}.
-	 * @return
+	 * @return SlicedModel
 	 */
 	public <R extends RepresentationModel<?>> SlicedModel<R> toModel(CursorPaginationSlice<T> slice,
 			RepresentationModelAssembler<T, R> assembler, Link link) {
@@ -131,7 +133,7 @@ public class SlicedResourcesAssembler<T>
 	 * the given domain type.
 	 * @param page must not be {@literal null}, content must be empty.
 	 * @param type must not be {@literal null}.
-	 * @return
+	 * @return SlicedModel
 	 * @since 1.0
 	 */
 	public SlicedModel<?> toEmptyModel(CursorPaginationSlice<?> page, Class<?> type) {
@@ -144,7 +146,7 @@ public class SlicedResourcesAssembler<T>
 	 * @param page must not be {@literal null}, content must be empty.
 	 * @param type must not be {@literal null}.
 	 * @param link must not be {@literal null}.
-	 * @return
+	 * @return SlicedModel
 	 * @since 1.0
 	 */
 	public SlicedModel<?> toEmptyModel(CursorPaginationSlice<?> page, Class<?> type, Link link) {
@@ -228,7 +230,7 @@ public class SlicedResourcesAssembler<T>
 	/**
 	 * Returns a default URI string either from the one configured on assembler creation
 	 * or by looking it up from the current request.
-	 * @return
+	 * @return UriTemplate
 	 */
 	private UriTemplate getUriTemplate(Optional<Link> baseLink) {
 		return UriTemplate.of(baseLink.map(Link::getHref).orElseGet(this::baseUriOrCurrentRequest));
@@ -242,7 +244,7 @@ public class SlicedResourcesAssembler<T>
 	 * @param slice
 	 * @param continuationToken
 	 * @param rel must not be {@literal null} or empty.
-	 * @return
+	 * @return a {@link Link} with the given rel
 	 */
 	private Link createLink(UriTemplate base, CursorPaginationSlice<T> slice, String continuationToken, String rel) {
 		UriComponentsBuilder builder = UriComponentsBuilder.fromUri(base.expand());

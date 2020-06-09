@@ -54,7 +54,7 @@ class CursorPaginationServiceIntegrationTest {
 		@Bean
 		public PersonPaginationService personPaginationService(MongoOperations mongoOperations) {
 			return new PersonPaginationService(mongoOperations, Arrays.asList("name", "birthday", "age", "timestamp",
-					"noGetterField", "exceptionGetterField", "nullField", "unknown"), "key", Person.class);
+					"noGetterField", "exceptionGetterField", "nullField", "unknown"), Person.class);
 		}
 
 	}
@@ -104,7 +104,7 @@ class CursorPaginationServiceIntegrationTest {
 		PersonSearchFilter filter = new PersonSearchFilter();
 		filter.setSize(3);
 		filter.setDirection(Sort.Direction.ASC);
-		CursorPaginationSlice<Person> slice1 = personPaginationService.executeQuery(filter);
+		CursorPaginationSlice<Person> slice1 = personPaginationService.executeQuery(filter, null);
 		assertNotNull(slice1.getContinuationToken());
 		assertTrue(slice1.hasContent());
 		assertEquals(3, slice1.getContent().size());
@@ -113,7 +113,7 @@ class CursorPaginationServiceIntegrationTest {
 		assertTrue(slice1.hasNext());
 		// get NextPage
 		filter.setContinuationToken(slice1.getContinuationToken());
-		CursorPaginationSlice<Person> slice2 = personPaginationService.executeQuery(filter);
+		CursorPaginationSlice<Person> slice2 = personPaginationService.executeQuery(filter, null);
 		assertNull(slice2.getContinuationToken());
 		assertTrue(slice2.hasContent());
 		assertEquals(1, slice2.getContent().size());
@@ -130,7 +130,7 @@ class CursorPaginationServiceIntegrationTest {
 	void sortingByIdDesc() throws Exception {
 		PersonSearchFilter filter = new PersonSearchFilter();
 		filter.setSize(3);
-		CursorPaginationSlice<Person> slice1 = personPaginationService.executeQuery(filter);
+		CursorPaginationSlice<Person> slice1 = personPaginationService.executeQuery(filter, null);
 		assertNotNull(slice1.getContinuationToken());
 		assertTrue(slice1.hasContent());
 		assertEquals(3, slice1.getContent().size());
@@ -139,7 +139,7 @@ class CursorPaginationServiceIntegrationTest {
 		assertTrue(slice1.hasNext());
 		// get NextPage
 		filter.setContinuationToken(slice1.getContinuationToken());
-		CursorPaginationSlice<Person> slice2 = personPaginationService.executeQuery(filter);
+		CursorPaginationSlice<Person> slice2 = personPaginationService.executeQuery(filter, null);
 		assertNull(slice2.getContinuationToken());
 		assertTrue(slice2.hasContent());
 		assertEquals(1, slice2.getContent().size());
@@ -158,7 +158,7 @@ class CursorPaginationServiceIntegrationTest {
 		filter.setDirection(Sort.Direction.ASC);
 		filter.setSort("birthday");
 		filter.setSize(3);
-		CursorPaginationSlice<Person> slice1 = personPaginationService.executeQuery(filter);
+		CursorPaginationSlice<Person> slice1 = personPaginationService.executeQuery(filter, null);
 		assertNotNull(slice1.getContinuationToken());
 		assertTrue(slice1.hasContent());
 		assertEquals(3, slice1.getContent().size());
@@ -167,7 +167,7 @@ class CursorPaginationServiceIntegrationTest {
 		assertTrue(slice1.hasNext());
 		// get NextPage
 		filter.setContinuationToken(slice1.getContinuationToken());
-		CursorPaginationSlice<Person> slice2 = personPaginationService.executeQuery(filter);
+		CursorPaginationSlice<Person> slice2 = personPaginationService.executeQuery(filter, null);
 		assertNull(slice2.getContinuationToken());
 		assertTrue(slice2.hasContent());
 		assertEquals(1, slice2.getContent().size());
@@ -188,7 +188,7 @@ class CursorPaginationServiceIntegrationTest {
 		filter.setDirection(Sort.Direction.DESC);
 		filter.setSort("birthday");
 		filter.setSize(3);
-		CursorPaginationSlice<Person> slice1 = personPaginationService.executeQuery(filter);
+		CursorPaginationSlice<Person> slice1 = personPaginationService.executeQuery(filter, null);
 		assertNotNull(slice1.getContinuationToken());
 		assertTrue(slice1.hasContent());
 		assertEquals(3, slice1.getContent().size());
@@ -200,7 +200,7 @@ class CursorPaginationServiceIntegrationTest {
 		assertEquals("5ede59ba2ed62b0006870000", slice1.getContent().get(2).getId());
 		// get NextPage
 		filter.setContinuationToken(slice1.getContinuationToken());
-		CursorPaginationSlice<Person> slice2 = personPaginationService.executeQuery(filter);
+		CursorPaginationSlice<Person> slice2 = personPaginationService.executeQuery(filter, null);
 		assertNull(slice2.getContinuationToken());
 		/*
 		 * we know that there is a next page, trying to get it using produced Query: {
@@ -219,7 +219,7 @@ class CursorPaginationServiceIntegrationTest {
 		filter.setSort("noGetterField");
 		filter.setSize(3);
 		CursorPaginationException thrown = assertThrows(CursorPaginationException.class, () -> {
-			personPaginationService.executeQuery(filter);
+			personPaginationService.executeQuery(filter, null);
 		});
 		assertEquals("No getter found for property noGetterField", thrown.getMessage());
 	}
@@ -232,7 +232,7 @@ class CursorPaginationServiceIntegrationTest {
 		filter.setSort("exceptionGetterField");
 		filter.setSize(3);
 		CursorPaginationException thrown = assertThrows(CursorPaginationException.class, () -> {
-			personPaginationService.executeQuery(filter);
+			personPaginationService.executeQuery(filter, null);
 		});
 		assertEquals("Error invoking getter getExceptionGetterField for property exceptionGetterField",
 				thrown.getMessage());
@@ -246,7 +246,7 @@ class CursorPaginationServiceIntegrationTest {
 		filter.setSort("nullField");
 		filter.setSize(3);
 		CursorPaginationException thrown = assertThrows(CursorPaginationException.class, () -> {
-			personPaginationService.executeQuery(filter);
+			personPaginationService.executeQuery(filter, null);
 		});
 		assertEquals("Null value not allowed for property nullField", thrown.getMessage());
 	}
@@ -259,7 +259,7 @@ class CursorPaginationServiceIntegrationTest {
 				new ObjectId());
 		filter.setContinuationToken(personPaginationService.encrypt(continuationToken));
 		CursorPaginationException thrown = assertThrows(CursorPaginationException.class, () -> {
-			personPaginationService.executeQuery(filter);
+			personPaginationService.executeQuery(filter, null);
 		});
 		assertEquals("Error getting parameter value: null", thrown.getMessage());
 	}
@@ -272,7 +272,7 @@ class CursorPaginationServiceIntegrationTest {
 		filter.setSort("unknown");
 		filter.setSize(3);
 		CursorPaginationException thrown = assertThrows(CursorPaginationException.class, () -> {
-			personPaginationService.executeQuery(filter);
+			personPaginationService.executeQuery(filter, null);
 		});
 		assertEquals("PersistentProperty is null", thrown.getMessage());
 	}

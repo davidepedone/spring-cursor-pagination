@@ -34,10 +34,9 @@ import org.springframework.util.Base64Utils;
 import org.springframework.util.DigestUtils;
 import org.springframework.util.StringUtils;
 
-import javax.crypto.Cipher;
-import javax.crypto.spec.SecretKeySpec;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.security.Principal;
 import java.time.Duration;
 import java.util.*;
 
@@ -56,21 +55,15 @@ public abstract class CursorPaginationService<T, V extends CursorPaginationSearc
 
 	private Duration queryDurationMaxTime;
 
-	private final String encryptionKey;
-
 	private final ClassTypeInformation<T> classTypeInformation;
 
 	private final Class<T> tClass;
 
 	private final MongoPersistentEntity<?> persistentEntity;
 
-	private static final String CIPHER_ALG = "Blowfish";
-
-	public CursorPaginationService(MongoOperations mongoOperations, List<String> sortableFields, String encryptionKey,
-			Class<T> tClass) {
+	public CursorPaginationService(MongoOperations mongoOperations, List<String> sortableFields, Class<T> tClass) {
 		this.mongoOperations = mongoOperations;
 		this.sortableFields = sortableFields;
-		this.encryptionKey = encryptionKey;
 		this.queryDurationMaxTime = null;
 		this.tClass = tClass;
 		this.classTypeInformation = ClassTypeInformation.from(tClass);
@@ -82,7 +75,8 @@ public abstract class CursorPaginationService<T, V extends CursorPaginationSearc
 		this.queryDurationMaxTime = queryDurationMaxTime;
 	}
 
-	public CursorPaginationSlice<T> executeQuery(V filter) throws CursorPaginationException {
+	public CursorPaginationSlice<T> executeQuery(V filter, @Nullable Principal principal)
+			throws CursorPaginationException {
 
 		boolean isSorted = StringUtils.hasText(filter.getSort());
 
@@ -93,7 +87,7 @@ public abstract class CursorPaginationService<T, V extends CursorPaginationSearc
 
 		Query query = new Query();
 		Optional.ofNullable(queryDurationMaxTime).ifPresent(query::maxTime);
-		configSearchQuery(query, filter);
+		configSearchQuery(query, filter, principal);
 
 		// calculate request filter hash ignoring page size
 		String hashed = getHash(filter);
@@ -200,14 +194,14 @@ public abstract class CursorPaginationService<T, V extends CursorPaginationSearc
 	}
 
 	/**
-	 * This method takes a {@MongoPersistentProperty} and an entity to retrieve the value
-	 * necessary to build the continuation token using reflection. If the property is
-	 * instance of a {@java.util.Date} returns the timestamp representing the value. Null
-	 * is not an option because can produce unexpected pagination results in some edge
-	 * cases.
-	 * @param prop
-	 * @param entity
-	 * @return
+	 * This method takes a {@link MongoPersistentProperty} and an entity to retrieve the
+	 * value necessary to build the continuation token using reflection. If the property
+	 * is instance of a {@link java.util.Date} returns the timestamp representing the
+	 * value. Null is not an option because can produce unexpected pagination results in
+	 * some edge cases.
+	 * @param prop MongoPersistentProperty
+	 * @param entity T entity
+	 * @return Value of the specified property
 	 * @throws CursorPaginationException if reflection fails or if value to be returned is
 	 * null
 	 */
@@ -235,11 +229,7 @@ public abstract class CursorPaginationService<T, V extends CursorPaginationSearc
 
 	protected String encrypt(String strToEncrypt) throws CursorPaginationException {
 		try {
-			SecretKeySpec skeyspec = new SecretKeySpec(encryptionKey.getBytes(), CIPHER_ALG);
-			Cipher cipher = Cipher.getInstance(CIPHER_ALG);
-			cipher.init(Cipher.ENCRYPT_MODE, skeyspec);
-			byte[] encrypted = cipher.doFinal(strToEncrypt.getBytes());
-			return Base64Utils.encodeToUrlSafeString(encrypted);
+			return Base64Utils.encodeToUrlSafeString(strToEncrypt.getBytes());
 		}
 		catch (Exception e) {
 			log.error("Error encrypting continuationToken: {}", e.getMessage());
@@ -249,10 +239,7 @@ public abstract class CursorPaginationService<T, V extends CursorPaginationSearc
 
 	protected String decrypt(String strToDecrypt) throws CursorPaginationException {
 		try {
-			SecretKeySpec skeyspec = new SecretKeySpec(encryptionKey.getBytes(), CIPHER_ALG);
-			Cipher cipher = Cipher.getInstance(CIPHER_ALG);
-			cipher.init(Cipher.DECRYPT_MODE, skeyspec);
-			byte[] decrypted = cipher.doFinal(Base64Utils.decodeFromUrlSafeString(strToDecrypt));
+			byte[] decrypted = Base64Utils.decodeFromUrlSafeString(strToDecrypt);
 			return new String(decrypted);
 		}
 		catch (Exception e) {
@@ -261,6 +248,6 @@ public abstract class CursorPaginationService<T, V extends CursorPaginationSearc
 		}
 	}
 
-	public abstract void configSearchQuery(Query query, V filter);
+	public abstract void configSearchQuery(Query query, V filter, @Nullable Principal principal);
 
 }
