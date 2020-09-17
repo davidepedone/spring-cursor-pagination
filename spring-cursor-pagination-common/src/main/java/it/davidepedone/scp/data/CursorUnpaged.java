@@ -13,26 +13,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package it.davidepedone.scp.search;
+package it.davidepedone.scp.data;
 
-import lombok.Data;
 import org.springframework.data.domain.Sort;
 
 /**
- * DTO to add
+ * {@link CursorPageable} implementation to represent the absence of pagination
+ * information.
  *
  * @author Davide Pedone
- * @since 1.0
+ * @since 1.1
  */
-@Data
-public abstract class CursorPaginationSearchFilter {
+public enum CursorUnpaged implements CursorPageable {
 
-	private String continuationToken;
+	INSTANCE;
 
-	private int size = 20;
+	@Override
+	public int getSize() {
+		throw new UnsupportedOperationException();
+	}
 
-	private String sort;
+	@Override
+	public String getSort() {
+		return null;
+	}
 
-	private Sort.Direction direction = Sort.Direction.DESC; // Default direction DESC
+	@Override
+	public Sort.Direction getDirection() {
+		return Sort.Direction.DESC;
+	}
+
+	@Override
+	public String getContinuationToken() {
+		return null;
+	}
 
 }

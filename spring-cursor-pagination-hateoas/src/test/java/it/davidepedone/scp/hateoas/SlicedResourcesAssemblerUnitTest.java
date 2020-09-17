@@ -16,10 +16,10 @@
 package it.davidepedone.scp.hateoas;
 
 import it.davidepedone.scp.pagination.CursorPaginationSlice;
+import it.davidepedone.scp.utils.HateoasCursorPageableHandlerMethodArgumentResolver;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.data.web.HateoasPageableHandlerMethodArgumentResolver;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.hateoas.Link;
@@ -42,7 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class SlicedResourcesAssemblerUnitTest {
 
-	HateoasPageableHandlerMethodArgumentResolver resolver = new HateoasPageableHandlerMethodArgumentResolver();
+	HateoasCursorPageableHandlerMethodArgumentResolver resolver = new HateoasCursorPageableHandlerMethodArgumentResolver();
 
 	SlicedResourcesAssembler<Person> assembler = new SlicedResourcesAssembler<>(resolver, null);
 

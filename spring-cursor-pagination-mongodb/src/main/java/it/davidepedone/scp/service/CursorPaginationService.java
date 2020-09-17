@@ -17,7 +17,7 @@ package it.davidepedone.scp.service;
 
 import it.davidepedone.scp.exception.CursorPaginationException;
 import it.davidepedone.scp.pagination.CursorPaginationSlice;
-import it.davidepedone.scp.search.CursorPaginationSearchFilter;
+import it.davidepedone.scp.data.CursorPageable;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.springframework.data.domain.Sort;
@@ -47,7 +47,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
  * @since 1.0
  */
 @Slf4j
-public abstract class CursorPaginationService<T, V extends CursorPaginationSearchFilter> {
+public abstract class CursorPaginationService<T, V extends Object> {
 
 	private final MongoOperations mongoOperations;
 
@@ -75,13 +75,13 @@ public abstract class CursorPaginationService<T, V extends CursorPaginationSearc
 		this.queryDurationMaxTime = queryDurationMaxTime;
 	}
 
-	public CursorPaginationSlice<T> executeQuery(V filter, @Nullable Principal principal)
+	public CursorPaginationSlice<T> executeQuery(V filter, CursorPageable pageRequest, @Nullable Principal principal)
 			throws CursorPaginationException {
 
-		boolean isSorted = StringUtils.hasText(filter.getSort());
+		boolean isSorted = StringUtils.hasText(pageRequest.getSort());
 
 		// Prevent sorting on unindexed fields
-		if (isSorted && !sortableFields.contains(filter.getSort())) {
+		if (isSorted && !sortableFields.contains(pageRequest.getSort())) {
 			throw new IllegalArgumentException("Sorting is only allowed on fields: " + sortableFields);
 		}
 
@@ -90,10 +90,10 @@ public abstract class CursorPaginationService<T, V extends CursorPaginationSearc
 		configSearchQuery(query, filter, principal);
 
 		// calculate request filter hash ignoring page size
-		String hashed = getHash(filter);
+		String hashed = getHash(filter, pageRequest);
 
-		if (StringUtils.hasText(filter.getContinuationToken())) {
-			String decoded = decrypt(filter.getContinuationToken());
+		if (StringUtils.hasText(pageRequest.getContinuationToken())) {
+			String decoded = decrypt(pageRequest.getContinuationToken());
 			log.debug("Decoded continuationToken: {}", decoded);
 			String[] params = decoded.split("_");
 
@@ -112,7 +112,7 @@ public abstract class CursorPaginationService<T, V extends CursorPaginationSearc
 			if (params.length == 2) {
 				// default sorting by id
 				String id = params[1];
-				if (Sort.Direction.DESC.equals(filter.getDirection())) {
+				if (Sort.Direction.DESC.equals(pageRequest.getDirection())) {
 					query.addCriteria(where("_id").lt(new ObjectId(id)));
 				}
 				else {
@@ -128,7 +128,7 @@ public abstract class CursorPaginationService<T, V extends CursorPaginationSearc
 				Object paramValue = getParamValue(paramValueAsString, typeInformation);
 
 				Criteria criteria = new Criteria();
-				if (Sort.Direction.DESC.equals(filter.getDirection())) {
+				if (Sort.Direction.DESC.equals(pageRequest.getDirection())) {
 					criteria.orOperator(where(paramName).is(paramValue).and("_id").lt(new ObjectId(id)),
 							where(paramName).lt(paramValue));
 				}
@@ -139,10 +139,9 @@ public abstract class CursorPaginationService<T, V extends CursorPaginationSearc
 				query.addCriteria(criteria);
 			}
 		}
-		query.limit(filter.getSize() + 1);
-		Sort querySorting = isSorted
-				? Sort.by(filter.getDirection(), filter.getSort()).and(Sort.by(filter.getDirection(), "_id"))
-				: Sort.by(filter.getDirection(), "_id");
+		query.limit(pageRequest.getSize() + 1);
+		Sort querySorting = isSorted ? Sort.by(pageRequest.getDirection(), pageRequest.getSort())
+				.and(Sort.by(pageRequest.getDirection(), "_id")) : Sort.by(pageRequest.getDirection(), "_id");
 		query.with(querySorting);
 
 		log.debug("Executing query: {}", query.toString());
@@ -156,23 +155,23 @@ public abstract class CursorPaginationService<T, V extends CursorPaginationSearc
 			throw new CursorPaginationException("Error executing query", e);
 		}
 
-		boolean hasNext = entities.size() > filter.getSize();
+		boolean hasNext = entities.size() > pageRequest.getSize();
 		String continuationToken = null;
 		List<T> toReturn = new ArrayList<>(entities);
 
 		if (hasNext) {
-			toReturn = entities.subList(0, filter.getSize());
+			toReturn = entities.subList(0, pageRequest.getSize());
 			T last = toReturn.get(toReturn.size() - 1);
 			String plainToken = hashed + "_" + getValue(persistentEntity.getIdProperty(), last);
 			if (isSorted) {
-				Object sortValue = getValue(persistentEntity.getPersistentProperty(filter.getSort()), last);
-				plainToken += "_" + filter.getSort() + "_" + sortValue;
+				Object sortValue = getValue(persistentEntity.getPersistentProperty(pageRequest.getSort()), last);
+				plainToken += "_" + pageRequest.getSort() + "_" + sortValue;
 			}
-			log.debug("Plain continuationToken: {}", plainToken);
+			log.debug("Plain continuationToken: {}", plainToken);
 			continuationToken = encrypt(plainToken);
 		}
 
-		return new CursorPaginationSlice<>(toReturn, filter.getSize(), continuationToken);
+		return new CursorPaginationSlice<>(toReturn, pageRequest.getSize(), continuationToken);
 	}
 
 	protected Object getParamValue(String paramValueAsString, TypeInformation<?> typeInformation)
@@ -188,9 +187,9 @@ public abstract class CursorPaginationService<T, V extends CursorPaginationSearc
 		}
 	}
 
-	protected String getHash(V filter) {
-		return DigestUtils
-				.md5DigestAsHex((filter.toString() + filter.getSort() + filter.getDirection().name()).getBytes());
+	protected String getHash(V filter, CursorPageable pageRequest) {
+		return DigestUtils.md5DigestAsHex(
+				(filter.toString() + pageRequest.getSort() + pageRequest.getDirection().name()).getBytes());
 	}
 
 	/**

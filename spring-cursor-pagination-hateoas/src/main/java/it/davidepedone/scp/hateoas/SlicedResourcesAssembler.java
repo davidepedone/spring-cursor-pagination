@@ -16,9 +16,9 @@
 package it.davidepedone.scp.hateoas;
 
 import it.davidepedone.scp.pagination.CursorPaginationSlice;
+import it.davidepedone.scp.utils.HateoasCursorPageableHandlerMethodArgumentResolver;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.domain.Slice;
-import org.springframework.data.web.HateoasPageableHandlerMethodArgumentResolver;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.hateoas.*;
 import org.springframework.hateoas.server.RepresentationModelAssembler;
@@ -46,13 +46,11 @@ import java.util.Optional;
 public class SlicedResourcesAssembler<T>
 		implements RepresentationModelAssembler<CursorPaginationSlice<T>, SlicedModel<EntityModel<T>>> {
 
-	private final HateoasPageableHandlerMethodArgumentResolver pageableResolver;
+	private final HateoasCursorPageableHandlerMethodArgumentResolver pageableResolver;
 
 	private final Optional<UriComponents> baseUri;
 
 	private final EmbeddedWrappers wrappers = new EmbeddedWrappers(false);
-
-	private static final String CONTINUATION_TOKEN_QUERY_PARAM = "continuationToken";
 
 	/**
 	 * Creates a new {@link SlicedResourcesAssembler} using the given
@@ -63,9 +61,9 @@ public class SlicedResourcesAssembler<T>
 	 * @param resolver hateoas resolver
 	 * @param baseUri can be {@literal null}.
 	 */
-	public SlicedResourcesAssembler(@Nullable HateoasPageableHandlerMethodArgumentResolver resolver,
+	public SlicedResourcesAssembler(@Nullable HateoasCursorPageableHandlerMethodArgumentResolver resolver,
 			@Nullable UriComponents baseUri) {
-		this.pageableResolver = null == resolver ? new HateoasPageableHandlerMethodArgumentResolver() : resolver;
+		this.pageableResolver = null == resolver ? new HateoasCursorPageableHandlerMethodArgumentResolver() : resolver;
 		this.baseUri = Optional.ofNullable(baseUri);
 	}
 
@@ -213,7 +211,7 @@ public class SlicedResourcesAssembler<T>
 		UriTemplate base = getUriTemplate(link);
 
 		UriComponentsBuilder builder = UriComponentsBuilder.fromUri(base.expand());
-		builder.replaceQueryParam(CONTINUATION_TOKEN_QUERY_PARAM);
+		builder.replaceQueryParam(pageableResolver.getContinuationTokenParameterName());
 
 		resources.add(
 				createLink(UriTemplate.of(builder.build().toString()), null, null, IanaLinkRelations.FIRST.value()));
@@ -252,7 +250,7 @@ public class SlicedResourcesAssembler<T>
 	private Link createLink(UriTemplate base, CursorPaginationSlice<T> slice, String continuationToken, String rel) {
 		UriComponentsBuilder builder = UriComponentsBuilder.fromUri(base.expand());
 		if (StringUtils.hasText(continuationToken)) {
-			builder.replaceQueryParam(CONTINUATION_TOKEN_QUERY_PARAM, continuationToken);
+			builder.replaceQueryParam(pageableResolver.getContinuationTokenParameterName(), continuationToken);
 		}
 		pageableResolver.enhance(builder, getMethodParameter(), slice);
 		return Link.of(UriTemplate.of(builder.build().toString()), rel);
@@ -263,7 +261,7 @@ public class SlicedResourcesAssembler<T>
 		UriComponentsBuilder builder = UriComponentsBuilder.fromUri(base.expand());
 		pageableResolver.enhance(builder, getMethodParameter(), slice);
 		if ("first".equals(rel)) {
-			builder.replaceQueryParam(CONTINUATION_TOKEN_QUERY_PARAM, "null");
+			builder.replaceQueryParam(pageableResolver.getContinuationTokenParameterName(), "null");
 			String url = builder.build().toString().replace("&continuationToken=null", "");
 			return Link.of(UriTemplate.of(url), rel);
 		}

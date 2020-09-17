@@ -15,7 +15,6 @@
  */
 package it.davidepedone.scp.testutils;
 
-import it.davidepedone.scp.search.CursorPaginationSearchFilter;
 import lombok.Data;
 
 import java.util.Date;
@@ -26,16 +25,12 @@ import java.util.Date;
  * @author Davide Pedone
  */
 @Data
-public class PersonSearchFilter extends CursorPaginationSearchFilter {
+public class PersonSearchFilter {
 
 	private String name;
 
 	private Date birhday;
 
 	private Integer age;
-
-	public PersonSearchFilter() {
-		super.setSize(1);
-	}
 
 }
