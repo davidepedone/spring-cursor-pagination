@@ -17,44 +17,43 @@ package it.davidepedone.scp.config;
 
 import it.davidepedone.scp.data.web.CursorPageableHandlerMethodArgumentResolver;
 import it.davidepedone.scp.data.web.config.CursorPageableHandlerMethodArgumentResolverCustomizer;
-import it.davidepedone.scp.hateoas.SlicedResourcesAssembler;
-import it.davidepedone.scp.utils.HateoasCursorPageableHandlerMethodArgumentResolver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.web.HateoasSortHandlerMethodArgumentResolver;
+import org.springframework.data.web.SortHandlerMethodArgumentResolver;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
- * JavaConfig class to register {@link SlicedResourcesAssembler} and
- * {@link HateoasCursorPageableHandlerMethodArgumentResolver}
+ * JavaConfig class to register {@link CursorPageableHandlerMethodArgumentResolver}
  *
  * @author Davide Pedone
- * @since 1.0
+ * @since 1.1
  */
 @Configuration
-public class SpringCursorPaginationHateoasConfiguration {
+public class SpringCursorPaginationCommonConfiguration implements WebMvcConfigurer {
 
 	@Autowired
 	private Optional<CursorPageableHandlerMethodArgumentResolverCustomizer> pageableResolverCustomizer;
 
 	@Autowired
-	private Optional<HateoasSortHandlerMethodArgumentResolver> hateoasSortHandlerMethodArgumentResolver;
-
-	private HateoasCursorPageableHandlerMethodArgumentResolver hateoasSearchFilterHandlerMethodArgumentResolver(
-			HateoasSortHandlerMethodArgumentResolver hateoasSortHandlerMethodArgumentResolver) {
-		HateoasCursorPageableHandlerMethodArgumentResolver resolver = new HateoasCursorPageableHandlerMethodArgumentResolver(
-				hateoasSortHandlerMethodArgumentResolver);
-		customizePageableResolver(resolver);
-		return resolver;
-	}
+	private Optional<SortHandlerMethodArgumentResolver> sortHandlerMethodArgumentResolver;
 
 	@Bean
-	public SlicedResourcesAssembler<?> slicedResourcesAssembler() {
-		return new SlicedResourcesAssembler<>(
-				hateoasSearchFilterHandlerMethodArgumentResolver(hateoasSortHandlerMethodArgumentResolver.orElse(null)),
-				null);
+	public CursorPageableHandlerMethodArgumentResolver searchFilterHandlerMethodArgumentResolver(
+			SortHandlerMethodArgumentResolver sortHandlerMethodArgumentResolver) {
+		CursorPageableHandlerMethodArgumentResolver searchFilterHandlerMethodArgumentResolver = new CursorPageableHandlerMethodArgumentResolver(
+				sortHandlerMethodArgumentResolver);
+		customizePageableResolver(searchFilterHandlerMethodArgumentResolver);
+		return searchFilterHandlerMethodArgumentResolver;
+	}
+
+	@Override
+	public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
+		resolvers.add(searchFilterHandlerMethodArgumentResolver(sortHandlerMethodArgumentResolver.orElse(null)));
 	}
 
 	protected void customizePageableResolver(CursorPageableHandlerMethodArgumentResolver pageableResolver) {
