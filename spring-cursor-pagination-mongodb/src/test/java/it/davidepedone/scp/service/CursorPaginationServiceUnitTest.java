@@ -90,7 +90,7 @@ class CursorPaginationServiceUnitTest {
 		PersonSearchFilter filter = new PersonSearchFilter();
 		CursorPageRequest pageRequest = CursorPageRequest.of(10, "name", Sort.Direction.ASC);
 		assertThrows(IllegalArgumentException.class, () -> {
-			personPaginationService.executeQuery(filter, pageRequest, null);
+			personPaginationService.executeQuery(pageRequest, filter, null);
 		});
 	}
 
@@ -100,7 +100,7 @@ class CursorPaginationServiceUnitTest {
 		PersonPaginationService personPaginationService = new PersonPaginationService(mongoOperations,
 				Arrays.asList("birhday", "age"), Person.class) {
 			@Override
-			protected String getHash(PersonSearchFilter filter, CursorPageable cursorPageable) {
+			protected String getHash(CursorPageable cursorPageable, PersonSearchFilter filter) {
 				return "expected";
 			}
 		};
@@ -108,7 +108,7 @@ class CursorPaginationServiceUnitTest {
 		PersonSearchFilter filter = new PersonSearchFilter();
 		CursorPageRequest pageRequest = CursorPageRequest.of(onePart, 10);
 		IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
-			personPaginationService.executeQuery(filter, pageRequest, null);
+			personPaginationService.executeQuery(pageRequest, filter, null);
 		});
 		assertEquals("Can't modify search filter when using a continuationToken", thrown.getMessage());
 	}
@@ -119,7 +119,7 @@ class CursorPaginationServiceUnitTest {
 		PersonPaginationService personPaginationService = new PersonPaginationService(mongoOperations,
 				Arrays.asList("birhday", "age"), Person.class) {
 			@Override
-			protected String getHash(PersonSearchFilter filter, CursorPageable cursorPageable) {
+			protected String getHash(CursorPageable cursorPageable, PersonSearchFilter filter) {
 				return "justone";
 			}
 		};
@@ -127,7 +127,7 @@ class CursorPaginationServiceUnitTest {
 		PersonSearchFilter filter = new PersonSearchFilter();
 		CursorPageRequest pageRequest = CursorPageRequest.of(onePart, 10);
 		CursorPaginationException thrown = assertThrows(CursorPaginationException.class, () -> {
-			personPaginationService.executeQuery(filter, pageRequest, null);
+			personPaginationService.executeQuery(pageRequest, filter, null);
 		});
 		assertEquals("ContinuationToken was expected to have 2 or 4 parts, but got 1", thrown.getMessage());
 	}
@@ -161,7 +161,7 @@ class CursorPaginationServiceUnitTest {
 				Arrays.asList("birhday", "age"), Person.class);
 		doThrow(new MongoException(10, "not a real message from mongodb")).when(mongoOperations).find(any(), any());
 		CursorPaginationException thrown = assertThrows(CursorPaginationException.class, () -> {
-			personPaginationService.executeQuery(new PersonSearchFilter(), CursorPageRequest.of(10), null);
+			personPaginationService.executeQuery(CursorPageRequest.of(10), new PersonSearchFilter(), null);
 		});
 		assertEquals("Error executing query", thrown.getMessage());
 		assertTrue(thrown.getCause() instanceof MongoException);
@@ -174,7 +174,7 @@ class CursorPaginationServiceUnitTest {
 				Arrays.asList("birhday", "age"), Person.class);
 		ArgumentCaptor<Query> argumentCaptor = ArgumentCaptor.forClass(Query.class);
 		try {
-			personPaginationService.executeQuery(new PersonSearchFilter(), CursorPageRequest.of(10), null);
+			personPaginationService.executeQuery(CursorPageRequest.of(10), new PersonSearchFilter(), null);
 			verify(mongoOperations).find(argumentCaptor.capture(), eq(Person.class));
 			Query executedQuery = argumentCaptor.getValue();
 			assertNull(executedQuery.getMeta().getMaxTimeMsec());
@@ -192,7 +192,7 @@ class CursorPaginationServiceUnitTest {
 		personPaginationService.setQueryDurationMaxTime(Duration.of(1, ChronoUnit.SECONDS));
 		ArgumentCaptor<Query> argumentCaptor = ArgumentCaptor.forClass(Query.class);
 		try {
-			personPaginationService.executeQuery(new PersonSearchFilter(), CursorPageRequest.of(10), null);
+			personPaginationService.executeQuery(CursorPageRequest.of(10), new PersonSearchFilter(), null);
 			verify(mongoOperations).find(argumentCaptor.capture(), eq(Person.class));
 			Query executedQuery = argumentCaptor.getValue();
 			Long timeout = executedQuery.getMeta().getMaxTimeMsec();
@@ -211,7 +211,7 @@ class CursorPaginationServiceUnitTest {
 				Arrays.asList("birhday", "age"), Person.class);
 		ArgumentCaptor<Query> argumentCaptor = ArgumentCaptor.forClass(Query.class);
 		try {
-			personPaginationService.executeQuery(new PersonSearchFilter(), CursorPageRequest.of(1), null);
+			personPaginationService.executeQuery(CursorPageRequest.of(1), new PersonSearchFilter(), null);
 			verify(mongoOperations).find(argumentCaptor.capture(), eq(Person.class));
 			Query executedQuery = argumentCaptor.getValue();
 			assertEquals(2, executedQuery.getLimit());
@@ -235,7 +235,7 @@ class CursorPaginationServiceUnitTest {
 		try {
 			PersonSearchFilter filter = new PersonSearchFilter();
 			CursorPageRequest pageRequest = CursorPageRequest.of(1, null, Sort.Direction.ASC);
-			personPaginationService.executeQuery(filter, pageRequest, null);
+			personPaginationService.executeQuery(pageRequest, filter, null);
 			verify(mongoOperations).find(argumentCaptor.capture(), eq(Person.class));
 			Query executedQuery = argumentCaptor.getValue();
 			assertEquals(2, executedQuery.getLimit());
@@ -256,7 +256,7 @@ class CursorPaginationServiceUnitTest {
 		PersonPaginationService personPaginationService = new PersonPaginationService(mongoOperations,
 				Arrays.asList("birhday", "age"), Person.class) {
 			@Override
-			protected String getHash(PersonSearchFilter filter, CursorPageable cursorPageable) {
+			protected String getHash(CursorPageable cursorPageable, PersonSearchFilter filter) {
 				return "prevhash";
 			}
 		};
@@ -266,7 +266,7 @@ class CursorPaginationServiceUnitTest {
 			ObjectId anObjectId = new ObjectId();
 			String continuationToken = String.format("prevhash_%s", anObjectId);
 			CursorPageRequest pageRequest = CursorPageRequest.of(personPaginationService.encrypt(continuationToken), 1);
-			personPaginationService.executeQuery(filter, pageRequest, null);
+			personPaginationService.executeQuery(pageRequest, filter, null);
 			verify(mongoOperations).find(argumentCaptor.capture(), eq(Person.class));
 			Query executedQuery = argumentCaptor.getValue();
 			assertEquals(2, executedQuery.getLimit());
@@ -290,7 +290,7 @@ class CursorPaginationServiceUnitTest {
 		PersonPaginationService personPaginationService = new PersonPaginationService(mongoOperations,
 				Arrays.asList("birhday", "age"), Person.class) {
 			@Override
-			protected String getHash(PersonSearchFilter filter, CursorPageable cursorPageable) {
+			protected String getHash(CursorPageable cursorPageable, PersonSearchFilter filter) {
 				return "prevhash";
 			}
 		};
@@ -301,7 +301,7 @@ class CursorPaginationServiceUnitTest {
 			String continuationToken = String.format("prevhash_%s", anObjectId);
 			CursorPageRequest pageRequest = CursorPageRequest.of(personPaginationService.encrypt(continuationToken), 1,
 					null, Sort.Direction.ASC);
-			personPaginationService.executeQuery(filter, pageRequest, null);
+			personPaginationService.executeQuery(pageRequest, filter, null);
 			verify(mongoOperations).find(argumentCaptor.capture(), eq(Person.class));
 			Query executedQuery = argumentCaptor.getValue();
 			assertEquals(2, executedQuery.getLimit());
@@ -328,7 +328,7 @@ class CursorPaginationServiceUnitTest {
 		try {
 			PersonSearchFilter filter = new PersonSearchFilter();
 			CursorPageRequest pageRequest = CursorPageRequest.of(1, "age", Sort.Direction.ASC);
-			personPaginationService.executeQuery(filter, pageRequest, null);
+			personPaginationService.executeQuery(pageRequest, filter, null);
 			verify(mongoOperations).find(argumentCaptor.capture(), eq(Person.class));
 			Query executedQuery = argumentCaptor.getValue();
 			assertEquals(2, executedQuery.getLimit());
@@ -354,7 +354,7 @@ class CursorPaginationServiceUnitTest {
 		try {
 			PersonSearchFilter filter = new PersonSearchFilter();
 			CursorPageRequest pageRequest = CursorPageRequest.of(1, "age", Sort.Direction.DESC);
-			personPaginationService.executeQuery(filter, pageRequest, null);
+			personPaginationService.executeQuery(pageRequest, filter, null);
 			verify(mongoOperations).find(argumentCaptor.capture(), eq(Person.class));
 			Query executedQuery = argumentCaptor.getValue();
 			assertEquals(2, executedQuery.getLimit());
@@ -377,7 +377,7 @@ class CursorPaginationServiceUnitTest {
 		PersonPaginationService personPaginationService = new PersonPaginationService(mongoOperations,
 				Arrays.asList("birhday", "age"), Person.class) {
 			@Override
-			protected String getHash(PersonSearchFilter filter, CursorPageable cursorPageable) {
+			protected String getHash(CursorPageable cursorPageable, PersonSearchFilter filter) {
 				return "prevhash";
 			}
 		};
@@ -390,7 +390,7 @@ class CursorPaginationServiceUnitTest {
 			CursorPageRequest pageRequest = CursorPageRequest.of(personPaginationService.encrypt(continuationToken), 1,
 					"age", Sort.Direction.ASC);
 
-			personPaginationService.executeQuery(filter, pageRequest, null);
+			personPaginationService.executeQuery(pageRequest, filter, null);
 			verify(mongoOperations).find(argumentCaptor.capture(), eq(Person.class));
 			Query executedQuery = argumentCaptor.getValue();
 			assertEquals(2, executedQuery.getLimit());
@@ -421,7 +421,7 @@ class CursorPaginationServiceUnitTest {
 		PersonPaginationService personPaginationService = new PersonPaginationService(mongoOperations,
 				Arrays.asList("birhday", "age"), Person.class) {
 			@Override
-			protected String getHash(PersonSearchFilter filter, CursorPageable cursorPageable) {
+			protected String getHash(CursorPageable cursorPageable, PersonSearchFilter filter) {
 				return "prevhash";
 			}
 		};
@@ -434,7 +434,7 @@ class CursorPaginationServiceUnitTest {
 			CursorPageRequest pageRequest = CursorPageRequest.of(personPaginationService.encrypt(continuationToken), 1,
 					"age", Sort.Direction.DESC);
 
-			personPaginationService.executeQuery(filter, pageRequest, null);
+			personPaginationService.executeQuery(pageRequest, filter, null);
 			verify(mongoOperations).find(argumentCaptor.capture(), eq(Person.class));
 			Query executedQuery = argumentCaptor.getValue();
 			assertEquals(2, executedQuery.getLimit());
@@ -485,7 +485,7 @@ class CursorPaginationServiceUnitTest {
 		PersonPaginationService personPaginationService = new PersonPaginationService(mongoOperations,
 				Arrays.asList("birhday", "age"), Person.class) {
 			@Override
-			protected String getHash(PersonSearchFilter filter, CursorPageable cursorPageable) {
+			protected String getHash(CursorPageable cursorPageable, PersonSearchFilter filter) {
 				return "mockhash";
 			}
 
@@ -497,7 +497,7 @@ class CursorPaginationServiceUnitTest {
 		try {
 			PersonSearchFilter filter = new PersonSearchFilter();
 			CursorPageRequest pageRequest = CursorPageRequest.of(2);
-			CursorPaginationSlice<Person> slice = personPaginationService.executeQuery(filter, pageRequest, null);
+			CursorPaginationSlice<Person> slice = personPaginationService.executeQuery(pageRequest, filter, null);
 			assertNotNull(slice);
 			assertNotNull(slice.getContinuationToken());
 			assertTrue(slice.hasNext());
@@ -538,7 +538,7 @@ class CursorPaginationServiceUnitTest {
 		PersonPaginationService personPaginationService = new PersonPaginationService(mongoOperations,
 				Arrays.asList("birhday", "age"), Person.class) {
 			@Override
-			protected String getHash(PersonSearchFilter filter, CursorPageable cursorPageable) {
+			protected String getHash(CursorPageable cursorPageable, PersonSearchFilter filter) {
 				return "mockhash";
 			}
 
@@ -550,7 +550,7 @@ class CursorPaginationServiceUnitTest {
 		try {
 			PersonSearchFilter filter = new PersonSearchFilter();
 			CursorPageRequest pageRequest = CursorPageRequest.of(2, "age", Sort.Direction.DESC);
-			CursorPaginationSlice<Person> slice = personPaginationService.executeQuery(filter, pageRequest, null);
+			CursorPaginationSlice<Person> slice = personPaginationService.executeQuery(pageRequest, filter, null);
 			assertNotNull(slice);
 			assertNotNull(slice.getContinuationToken());
 			assertTrue(slice.hasNext());
