@@ -35,7 +35,7 @@ import static org.assertj.core.api.Assertions.*;
  *
  * @author Davide Pedone
  */
-public class CursorPageableHandlerMethodArgumentResolverUnitTests extends CursorPageableDefaultUnitTests {
+class CursorPageableHandlerMethodArgumentResolverUnitTests extends CursorPageableDefaultUnitTests {
 
 	MethodParameter supportedMethodParameter;
 

@@ -123,7 +123,7 @@ class HateoasCursorPageableHandlerMethodArgumentResolverUnitTests
 		UriComponents uriComponents = UriComponentsBuilder.fromUriString(baseUri).build();
 
 		HateoasCursorPageableHandlerMethodArgumentResolver resolver = getResolver();
-		assertThat(resolver.getPaginationTemplateVariables(null, uriComponents).toString()).isEqualTo(expected);
+		assertThat(resolver.getPaginationTemplateVariables(null, uriComponents)).hasToString(expected);
 	}
 
 }

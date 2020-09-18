@@ -37,13 +37,13 @@ import java.util.Optional;
 public class SpringCursorPaginationCommonConfiguration implements WebMvcConfigurer {
 
 	@Autowired
-	private Optional<CursorPageableHandlerMethodArgumentResolverCustomizer> pageableResolverCustomizer;
+	private Optional<CursorPageableHandlerMethodArgumentResolverCustomizer> cursorPageableResolverCustomizer;
 
 	@Autowired
 	private Optional<SortHandlerMethodArgumentResolver> sortHandlerMethodArgumentResolver;
 
 	@Bean
-	public CursorPageableHandlerMethodArgumentResolver searchFilterHandlerMethodArgumentResolver(
+	public CursorPageableHandlerMethodArgumentResolver cursorPageableResolver(
 			SortHandlerMethodArgumentResolver sortHandlerMethodArgumentResolver) {
 		CursorPageableHandlerMethodArgumentResolver searchFilterHandlerMethodArgumentResolver = new CursorPageableHandlerMethodArgumentResolver(
 				sortHandlerMethodArgumentResolver);
@@ -53,11 +53,11 @@ public class SpringCursorPaginationCommonConfiguration implements WebMvcConfigur
 
 	@Override
 	public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
-		resolvers.add(searchFilterHandlerMethodArgumentResolver(sortHandlerMethodArgumentResolver.orElse(null)));
+		resolvers.add(cursorPageableResolver(sortHandlerMethodArgumentResolver.orElse(null)));
 	}
 
 	protected void customizePageableResolver(CursorPageableHandlerMethodArgumentResolver pageableResolver) {
-		pageableResolverCustomizer.ifPresent(c -> c.customize(pageableResolver));
+		cursorPageableResolverCustomizer.ifPresent(c -> c.customize(pageableResolver));
 	}
 
 }
