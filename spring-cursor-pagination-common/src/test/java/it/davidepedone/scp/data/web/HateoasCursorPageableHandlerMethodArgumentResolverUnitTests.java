@@ -97,7 +97,7 @@ class HateoasCursorPageableHandlerMethodArgumentResolverUnitTests
 	void enhancesUnpaged() {
 		UriComponentsBuilder builder = UriComponentsBuilder.fromPath("/");
 		getResolver().enhance(builder, null, CursorPageable.unpaged());
-		assertThat(builder).isEqualTo(builder);
+		assertThat(builder.toUriString()).isEqualTo("/?size=20");
 	}
 
 	@Override
