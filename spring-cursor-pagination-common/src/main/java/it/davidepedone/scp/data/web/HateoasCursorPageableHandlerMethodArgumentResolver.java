@@ -13,16 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package it.davidepedone.scp.utils;
+package it.davidepedone.scp.data.web;
 
 import it.davidepedone.scp.data.CursorPageable;
-import it.davidepedone.scp.data.web.CursorPageableHandlerMethodArgumentResolver;
 import org.springframework.core.MethodParameter;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.HateoasSortHandlerMethodArgumentResolver;
+import org.springframework.hateoas.TemplateVariable;
+import org.springframework.hateoas.TemplateVariables;
 import org.springframework.hateoas.server.mvc.UriComponentsContributor;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.MultiValueMap;
+import org.springframework.util.StringUtils;
+import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+
+import static org.springframework.hateoas.TemplateVariable.VariableType.REQUEST_PARAM;
+import static org.springframework.hateoas.TemplateVariable.VariableType.REQUEST_PARAM_CONTINUED;
 
 /**
  * Extension of {@link CursorPageableHandlerMethodArgumentResolver} that also supports
@@ -74,11 +87,41 @@ public class HateoasCursorPageableHandlerMethodArgumentResolver extends CursorPa
 
 		String continuationTokenPropertyName = getParameterNameToUse(getContinuationTokenParameterName(), parameter);
 		String sizePropertyName = getParameterNameToUse(getSizeParameterName(), parameter);
-
+		if (StringUtils.hasText(pageable.getContinuationToken())) {
+			builder.replaceQueryParam(continuationTokenPropertyName, pageable.getContinuationToken());
+		}
 		builder.replaceQueryParam(sizePropertyName, Math.min(pageable.getSize(), getMaxPageSize()));
-		builder.replaceQueryParam(continuationTokenPropertyName, pageable.getContinuationToken());
 
-		this.sortResolver.enhance(builder, parameter, pageable.getSort());
+		this.sortResolver.enhance(builder, parameter,
+				Optional.ofNullable(pageable.getSort()).map(s -> Sort.by(pageable.getDirection(), s)).orElse(null));
+	}
+
+	/**
+	 * Returns the template variable for the pagination parameters.
+	 * @param parameter can be {@literal null}.
+	 * @return
+	 */
+	public TemplateVariables getPaginationTemplateVariables(MethodParameter parameter, UriComponents template) {
+
+		String continuationTokenPropertyName = getParameterNameToUse(getContinuationTokenParameterName(), parameter);
+		String sizePropertyName = getParameterNameToUse(getSizeParameterName(), parameter);
+
+		List<TemplateVariable> names = new ArrayList<>();
+		MultiValueMap<String, String> queryParameters = template.getQueryParams();
+		boolean append = !queryParameters.isEmpty();
+
+		for (String propertyName : Arrays.asList(continuationTokenPropertyName, sizePropertyName)) {
+
+			if (!queryParameters.containsKey(propertyName)) {
+
+				TemplateVariable.VariableType type = append ? REQUEST_PARAM_CONTINUED : REQUEST_PARAM;
+				String description = String.format("pagination.%s.description", propertyName);
+				names.add(new TemplateVariable(propertyName, type, description));
+			}
+		}
+
+		TemplateVariables pagingVariables = new TemplateVariables(names);
+		return pagingVariables.concat(sortResolver.getSortTemplateVariables(parameter, template));
 	}
 
 	private static HateoasSortHandlerMethodArgumentResolver getDefaultedSortResolver(
