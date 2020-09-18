@@ -16,7 +16,7 @@
 package it.davidepedone.scp.hateoas;
 
 import it.davidepedone.scp.pagination.CursorPaginationSlice;
-import it.davidepedone.scp.utils.HateoasCursorPageableHandlerMethodArgumentResolver;
+import it.davidepedone.scp.data.web.HateoasCursorPageableHandlerMethodArgumentResolver;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

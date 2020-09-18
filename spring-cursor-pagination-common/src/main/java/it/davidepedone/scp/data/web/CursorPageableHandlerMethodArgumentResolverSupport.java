@@ -54,8 +54,6 @@ public abstract class CursorPageableHandlerMethodArgumentResolverSupport {
 
 	private static final String DEFAULT_SIZE_PARAMETER = "size";
 
-	private static final String DEFAULT_SORT_PARAMETER = "sort";
-
 	private static final String DEFAULT_PREFIX = "";
 
 	private static final String DEFAULT_QUALIFIER_DELIMITER = "_";
@@ -65,8 +63,6 @@ public abstract class CursorPageableHandlerMethodArgumentResolverSupport {
 	private String continuationTokenParameterName = DEFAULT_CONTINUATIONTOKEN_PARAMETER;
 
 	private String sizeParameterName = DEFAULT_SIZE_PARAMETER;
-
-	private String sortParameterName = DEFAULT_SORT_PARAMETER;
 
 	private String prefix = DEFAULT_PREFIX;
 
@@ -216,7 +212,8 @@ public abstract class CursorPageableHandlerMethodArgumentResolverSupport {
 		// Limit upper bound
 		ps = Math.min(ps, maxPageSize);
 
-		return CursorPageRequest.of(continuationToken, ps, defaultOrFallback.map(CursorPageable::getSort).orElse(null));
+		return CursorPageRequest.of(continuationToken, ps, defaultOrFallback.map(CursorPageable::getSort).orElse(null),
+				defaultOrFallback.map(CursorPageable::getDirection).orElse(CursorPageable.unpaged().getDirection()));
 	}
 
 	/**
@@ -234,7 +231,7 @@ public abstract class CursorPageableHandlerMethodArgumentResolverSupport {
 
 		try {
 			int parsed = Integer.parseInt(parameter) - (shiftIndex ? 1 : 0);
-			return Optional.of(parsed < 0 ? 0 : parsed > upper ? upper : parsed);
+			return Optional.of(parsed < 0 ? 0 : Math.min(parsed, upper));
 		}
 		catch (NumberFormatException e) {
 			return Optional.of(0);
@@ -251,7 +248,6 @@ public abstract class CursorPageableHandlerMethodArgumentResolverSupport {
 		return this.maxPageSize;
 	}
 
-	// TODO questi 2 metodi potrebbero servire anche per hateoas
 	public static <T> T getSpecificPropertyOrDefaultFromValue(Annotation annotation, String property) {
 
 		Object propertyDefaultValue = AnnotationUtils.getDefaultValue(annotation, property);
@@ -269,8 +265,8 @@ public abstract class CursorPageableHandlerMethodArgumentResolverSupport {
 	}
 
 	/**
-	 * Asserts uniqueness of all {@link Pageable} parameters of the method of the given
-	 * {@link MethodParameter}.
+	 * Asserts uniqueness of all {@link CursorPageable} parameters of the method of the
+	 * given {@link MethodParameter}.
 	 * @param parameter must not be {@literal null}.
 	 */
 	public static void assertPageableUniqueness(MethodParameter parameter) {
@@ -300,11 +296,11 @@ public abstract class CursorPageableHandlerMethodArgumentResolverSupport {
 
 		for (Class<?> type : method.getParameterTypes()) {
 
-			if (pageableFound && type.equals(Pageable.class)) {
+			if (pageableFound && type.equals(CursorPageable.class)) {
 				return true;
 			}
 
-			if (type.equals(Pageable.class)) {
+			if (type.equals(CursorPageable.class)) {
 				pageableFound = true;
 			}
 		}

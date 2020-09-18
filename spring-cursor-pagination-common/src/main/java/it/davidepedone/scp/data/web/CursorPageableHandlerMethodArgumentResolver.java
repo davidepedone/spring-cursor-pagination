@@ -55,7 +55,7 @@ public class CursorPageableHandlerMethodArgumentResolver extends CursorPageableH
 
 	@Override
 	public CursorPageable resolveArgument(MethodParameter methodParameter, ModelAndViewContainer modelAndViewContainer,
-			NativeWebRequest nativeWebRequest, WebDataBinderFactory webDataBinderFactory) throws Exception {
+			NativeWebRequest nativeWebRequest, WebDataBinderFactory webDataBinderFactory) {
 
 		String continuationToken = nativeWebRequest
 				.getParameter(getParameterNameToUse(getContinuationTokenParameterName(), methodParameter));

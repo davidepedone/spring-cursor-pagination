@@ -30,7 +30,7 @@ public enum CursorUnpaged implements CursorPageable {
 
 	@Override
 	public int getSize() {
-		throw new UnsupportedOperationException();
+		return 20;
 	}
 
 	@Override
