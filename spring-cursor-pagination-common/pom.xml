@@ -21,7 +21,6 @@
         <dependency>
             <groupId>org.springframework.hateoas</groupId>
             <artifactId>spring-hateoas</artifactId>
-            <!--<version>${spring-hateoas}</version>-->
             <optional>true</optional>
         </dependency>
         <dependency>

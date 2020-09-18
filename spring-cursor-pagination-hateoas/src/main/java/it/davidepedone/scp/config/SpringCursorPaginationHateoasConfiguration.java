@@ -16,9 +16,9 @@
 package it.davidepedone.scp.config;
 
 import it.davidepedone.scp.data.web.CursorPageableHandlerMethodArgumentResolver;
+import it.davidepedone.scp.data.web.HateoasCursorPageableHandlerMethodArgumentResolver;
 import it.davidepedone.scp.data.web.config.CursorPageableHandlerMethodArgumentResolverCustomizer;
 import it.davidepedone.scp.hateoas.SlicedResourcesAssembler;
-import it.davidepedone.scp.data.web.HateoasCursorPageableHandlerMethodArgumentResolver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,9 +38,10 @@ import java.util.Optional;
 public class SpringCursorPaginationHateoasConfiguration {
 
 	@Autowired
-	private Optional<CursorPageableHandlerMethodArgumentResolverCustomizer> pageableResolverCustomizer;
+	private Optional<CursorPageableHandlerMethodArgumentResolverCustomizer> cursorPageableResolverCustomizer;
 
-	private HateoasCursorPageableHandlerMethodArgumentResolver hateoasSearchFilterHandlerMethodArgumentResolver(
+	@Bean
+	public HateoasCursorPageableHandlerMethodArgumentResolver hateoasCursorPageableResolver(
 			HateoasSortHandlerMethodArgumentResolver hateoasSortHandlerMethodArgumentResolver) {
 		HateoasCursorPageableHandlerMethodArgumentResolver resolver = new HateoasCursorPageableHandlerMethodArgumentResolver(
 				hateoasSortHandlerMethodArgumentResolver);
@@ -49,14 +50,14 @@ public class SpringCursorPaginationHateoasConfiguration {
 	}
 
 	@Bean
-	public SlicedResourcesAssembler slicedResourcesAssembler(
+	public SlicedResourcesAssembler<?> slicedResourcesAssembler(
 			@Nullable HateoasSortHandlerMethodArgumentResolver hateoasSortHandlerMethodArgumentResolver) {
-		return new SlicedResourcesAssembler<>(
-				hateoasSearchFilterHandlerMethodArgumentResolver(hateoasSortHandlerMethodArgumentResolver), null);
+		return new SlicedResourcesAssembler<>(hateoasCursorPageableResolver(hateoasSortHandlerMethodArgumentResolver),
+				null);
 	}
 
 	protected void customizePageableResolver(CursorPageableHandlerMethodArgumentResolver pageableResolver) {
-		pageableResolverCustomizer.ifPresent(c -> c.customize(pageableResolver));
+		cursorPageableResolverCustomizer.ifPresent(c -> c.customize(pageableResolver));
 	}
 
 }
