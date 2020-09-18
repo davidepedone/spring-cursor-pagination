@@ -15,9 +15,9 @@
  */
 package it.davidepedone.scp.service;
 
+import it.davidepedone.scp.data.CursorPageable;
 import it.davidepedone.scp.exception.CursorPaginationException;
 import it.davidepedone.scp.pagination.CursorPaginationSlice;
-import it.davidepedone.scp.data.CursorPageable;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.springframework.data.domain.Sort;
@@ -47,7 +47,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
  * @since 1.0
  */
 @Slf4j
-public abstract class CursorPaginationService<T, V extends Object> {
+public abstract class CursorPaginationService<T, V> {
 
 	private final MongoOperations mongoOperations;
 
@@ -75,8 +75,8 @@ public abstract class CursorPaginationService<T, V extends Object> {
 		this.queryDurationMaxTime = queryDurationMaxTime;
 	}
 
-	public CursorPaginationSlice<T> executeQuery(V filter, CursorPageable pageRequest, @Nullable Principal principal)
-			throws CursorPaginationException {
+	public CursorPaginationSlice<T> executeQuery(CursorPageable pageRequest, @Nullable V filter,
+			@Nullable Principal principal) throws CursorPaginationException {
 
 		boolean isSorted = StringUtils.hasText(pageRequest.getSort());
 
@@ -90,7 +90,7 @@ public abstract class CursorPaginationService<T, V extends Object> {
 		configSearchQuery(query, filter, principal);
 
 		// calculate request filter hash ignoring page size
-		String hashed = getHash(filter, pageRequest);
+		String hashed = getHash(pageRequest, filter);
 
 		if (StringUtils.hasText(pageRequest.getContinuationToken())) {
 			String decoded = decrypt(pageRequest.getContinuationToken());
@@ -187,9 +187,9 @@ public abstract class CursorPaginationService<T, V extends Object> {
 		}
 	}
 
-	protected String getHash(V filter, CursorPageable pageRequest) {
-		return DigestUtils.md5DigestAsHex(
-				(filter.toString() + pageRequest.getSort() + pageRequest.getDirection().name()).getBytes());
+	protected String getHash(CursorPageable pageRequest, @Nullable V filter) {
+		return DigestUtils.md5DigestAsHex((Optional.ofNullable(filter).map(Object::toString).orElse("")
+				+ pageRequest.getSort() + pageRequest.getDirection().name()).getBytes());
 	}
 
 	/**
@@ -247,6 +247,6 @@ public abstract class CursorPaginationService<T, V extends Object> {
 		}
 	}
 
-	public abstract void configSearchQuery(Query query, V filter, @Nullable Principal principal);
+	public abstract void configSearchQuery(Query query, @Nullable V filter, @Nullable Principal principal);
 
 }
