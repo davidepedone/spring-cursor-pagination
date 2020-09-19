@@ -1,3 +1,7 @@
+Spring Cursor Pagination
+==========
+
+[![Maven Status](https://maven-badges.herokuapp.com/maven-central/it.davidepedone/spring-cursor-pagination/badge.svg?style=flat)](http://mvnrepository.com/artifact/it.davidepedone/spring-cursor-pagination)
 [![Build Status](https://travis-ci.org/davidepedone/spring-cursor-pagination.svg?branch=master)](https://travis-ci.org/davidepedone/spring-cursor-pagination)
 [![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=davidepedone_spring-cursor-pagination&metric=alert_status)](https://sonarcloud.io/dashboard?id=davidepedone_spring-cursor-pagination)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=davidepedone_spring-cursor-pagination&metric=coverage)](https://sonarcloud.io/dashboard?id=davidepedone_spring-cursor-pagination)
@@ -79,6 +83,9 @@ To change query string parameter names just define a `CursorPageableHandlerMetho
 		};
 	}
 ```
+
+# **Demo Project**
+Check out a simple demo project [here](https://github.com/davidepedone/spring-cursor-pagination-demo)
 
 # **Maven Central**
 
