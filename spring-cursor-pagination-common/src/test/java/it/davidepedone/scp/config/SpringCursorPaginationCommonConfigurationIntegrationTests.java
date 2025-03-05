@@ -76,7 +76,7 @@ class SpringCursorPaginationCommonConfigurationIntegrationTests {
 	void picksUpCursorPageableResolverCustomizer() {
 
 		ApplicationContext context = WebTestUtils
-				.createApplicationContext(CursorPageableResolverCustomizerConfig.class);
+			.createApplicationContext(CursorPageableResolverCustomizerConfig.class);
 		List<String> names = Arrays.asList(context.getBeanDefinitionNames());
 		CursorPageableHandlerMethodArgumentResolver resolver = context.getBean("cursorPageableResolver",
 				CursorPageableHandlerMethodArgumentResolver.class);

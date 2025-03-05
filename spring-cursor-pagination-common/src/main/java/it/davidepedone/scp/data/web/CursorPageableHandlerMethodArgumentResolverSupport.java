@@ -204,8 +204,8 @@ public abstract class CursorPageableHandlerMethodArgumentResolverSupport {
 			return CursorPageable.unpaged();
 		}
 
-		int ps = pageSize.orElseGet(
-				() -> defaultOrFallback.map(CursorPageable::getSize).orElseThrow(IllegalStateException::new));
+		int ps = pageSize
+			.orElseGet(() -> defaultOrFallback.map(CursorPageable::getSize).orElseThrow(IllegalStateException::new));
 
 		// Limit lower bound
 		ps = ps < 1 ? defaultOrFallback.map(CursorPageable::getSize).orElseThrow(IllegalStateException::new) : ps;

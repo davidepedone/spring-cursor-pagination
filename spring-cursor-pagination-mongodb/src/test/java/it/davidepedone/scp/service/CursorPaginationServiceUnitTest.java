@@ -40,6 +40,7 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.data.util.TypeInformation;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
@@ -382,7 +383,8 @@ class CursorPaginationServiceUnitTest {
 			}
 		};
 		ArgumentCaptor<Query> argumentCaptor = ArgumentCaptor.forClass(Query.class);
-		doReturn(Long.valueOf("10")).when(mappingMongoConverter).convertToMongoType(any(), any());
+		doReturn(Long.valueOf("10")).when(mappingMongoConverter)
+			.convertToMongoType((Object) any(), (TypeInformation<?>) any());
 		try {
 			PersonSearchFilter filter = new PersonSearchFilter();
 			ObjectId anObjectId = new ObjectId();
@@ -426,7 +428,8 @@ class CursorPaginationServiceUnitTest {
 			}
 		};
 		ArgumentCaptor<Query> argumentCaptor = ArgumentCaptor.forClass(Query.class);
-		doReturn(Long.valueOf("10")).when(mappingMongoConverter).convertToMongoType(any(), any());
+		doReturn(Long.valueOf("10")).when(mappingMongoConverter)
+			.convertToMongoType((Object) any(), (TypeInformation<?>) any());
 		try {
 			PersonSearchFilter filter = new PersonSearchFilter();
 			ObjectId anObjectId = new ObjectId();

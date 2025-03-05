@@ -1,0 +1,7 @@
+spring:
+  data:
+    mongodb:
+      database: test
+      port: 27017
+      username: test
+      password: pass

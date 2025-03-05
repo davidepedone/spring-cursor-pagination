@@ -73,10 +73,10 @@ class HateoasCursorPageableHandlerMethodArgumentResolverUnitTests
 
 	@Test
 	void appendsTemplateVariablesCorrectly() {
-		assertTemplateEnrichment("/foo", "{?continuationToken,size,sort}");
-		assertTemplateEnrichment("/foo?bar=1", "{&continuationToken,size,sort}");
-		assertTemplateEnrichment("/foo?continuationToken=1", "{&size,sort}");
-		assertTemplateEnrichment("/foo?continuationToken=1&size=10", "{&sort}");
+		assertTemplateEnrichment("/foo", "{?continuationToken,size,sort*}");
+		assertTemplateEnrichment("/foo?bar=1", "{&continuationToken,size,sort*}");
+		assertTemplateEnrichment("/foo?continuationToken=1", "{&size,sort*}");
+		assertTemplateEnrichment("/foo?continuationToken=1&size=10", "{&sort*}");
 		assertTemplateEnrichment("/foo?continuationToken=1&sort=foo,asc", "{&size}");
 		assertTemplateEnrichment("/foo?continuationToken=1&size=10&sort=foo,asc", "");
 	}
@@ -90,7 +90,7 @@ class HateoasCursorPageableHandlerMethodArgumentResolverUnitTests
 		resolver.setContinuationTokenParameterName("foo");
 		String variables = resolver.getPaginationTemplateVariables(null, uriComponents).toString();
 
-		assertThat(variables).isEqualTo("{?foo,size,sort}");
+		assertThat(variables).isEqualTo("{?foo,size,sort*}");
 	}
 
 	@Test
