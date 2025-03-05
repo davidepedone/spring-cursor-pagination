@@ -18,6 +18,7 @@ package it.davidepedone.scp.service;
 import it.davidepedone.scp.data.CursorPageable;
 import it.davidepedone.scp.exception.CursorPaginationException;
 import it.davidepedone.scp.pagination.CursorPaginationSlice;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.springframework.data.domain.Sort;
@@ -30,7 +31,6 @@ import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
-import org.springframework.util.Base64Utils;
 import org.springframework.util.DigestUtils;
 import org.springframework.util.StringUtils;
 
@@ -53,6 +53,7 @@ public abstract class CursorPaginationService<T, V> {
 
 	private final List<String> sortableFields;
 
+	@Setter
 	private Duration queryDurationMaxTime;
 
 	private final ClassTypeInformation<T> classTypeInformation;
@@ -69,10 +70,6 @@ public abstract class CursorPaginationService<T, V> {
 		this.classTypeInformation = ClassTypeInformation.from(tClass);
 		this.persistentEntity = mongoOperations.getConverter().getMappingContext().getPersistentEntity(tClass);
 		Assert.notNull(this.persistentEntity, "PersistentEntity must not be null!");
-	}
-
-	public void setQueryDurationMaxTime(Duration queryDurationMaxTime) {
-		this.queryDurationMaxTime = queryDurationMaxTime;
 	}
 
 	public CursorPaginationSlice<T> executeQuery(CursorPageable pageRequest, @Nullable V filter,
@@ -141,7 +138,7 @@ public abstract class CursorPaginationService<T, V> {
 		}
 		query.limit(pageRequest.getSize() + 1);
 		Sort querySorting = isSorted ? Sort.by(pageRequest.getDirection(), pageRequest.getSort())
-				.and(Sort.by(pageRequest.getDirection(), "_id")) : Sort.by(pageRequest.getDirection(), "_id");
+			.and(Sort.by(pageRequest.getDirection(), "_id")) : Sort.by(pageRequest.getDirection(), "_id");
 		query.with(querySorting);
 
 		log.debug("Executing query: {}", query.toString());
@@ -189,7 +186,8 @@ public abstract class CursorPaginationService<T, V> {
 
 	protected String getHash(CursorPageable pageRequest, @Nullable V filter) {
 		return DigestUtils.md5DigestAsHex((Optional.ofNullable(filter).map(Object::toString).orElse("")
-				+ pageRequest.getSort() + pageRequest.getDirection().name()).getBytes());
+				+ pageRequest.getSort() + pageRequest.getDirection().name())
+			.getBytes());
 	}
 
 	/**
@@ -228,7 +226,7 @@ public abstract class CursorPaginationService<T, V> {
 
 	protected String encrypt(String strToEncrypt) throws CursorPaginationException {
 		try {
-			return Base64Utils.encodeToUrlSafeString(strToEncrypt.getBytes());
+			return Base64.getUrlEncoder().encodeToString(strToEncrypt.getBytes());
 		}
 		catch (Exception e) {
 			log.error("Error encrypting continuationToken: {}", e.getMessage());
@@ -238,7 +236,7 @@ public abstract class CursorPaginationService<T, V> {
 
 	protected String decrypt(String strToDecrypt) throws CursorPaginationException {
 		try {
-			byte[] decrypted = Base64Utils.decodeFromUrlSafeString(strToDecrypt);
+			byte[] decrypted = Base64.getUrlDecoder().decode(strToDecrypt);
 			return new String(decrypted);
 		}
 		catch (Exception e) {

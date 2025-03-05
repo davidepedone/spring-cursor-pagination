@@ -58,7 +58,7 @@ public class CursorPageableHandlerMethodArgumentResolver extends CursorPageableH
 			NativeWebRequest nativeWebRequest, WebDataBinderFactory webDataBinderFactory) {
 
 		String continuationToken = nativeWebRequest
-				.getParameter(getParameterNameToUse(getContinuationTokenParameterName(), methodParameter));
+			.getParameter(getParameterNameToUse(getContinuationTokenParameterName(), methodParameter));
 		String pageSize = nativeWebRequest.getParameter(getParameterNameToUse(getSizeParameterName(), methodParameter));
 		Sort sort = sortResolver.resolveArgument(methodParameter, modelAndViewContainer, nativeWebRequest,
 				webDataBinderFactory);

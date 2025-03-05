@@ -55,8 +55,8 @@ class CursorPageableHandlerMethodArgumentResolverUnitTests extends CursorPageabl
 
 	@Test
 	void rejectsEmptyContinuationTokenParameterName() {
-		assertThatIllegalArgumentException().isThrownBy(
-				() -> new CursorPageableHandlerMethodArgumentResolver().setContinuationTokenParameterName(""));
+		assertThatIllegalArgumentException()
+			.isThrownBy(() -> new CursorPageableHandlerMethodArgumentResolver().setContinuationTokenParameterName(""));
 	}
 
 	@Test
@@ -68,13 +68,13 @@ class CursorPageableHandlerMethodArgumentResolverUnitTests extends CursorPageabl
 	@Test
 	void rejectsEmptySizeParameterName() {
 		assertThatIllegalArgumentException()
-				.isThrownBy(() -> new CursorPageableHandlerMethodArgumentResolver().setSizeParameterName(""));
+			.isThrownBy(() -> new CursorPageableHandlerMethodArgumentResolver().setSizeParameterName(""));
 	}
 
 	@Test
 	void rejectsNullSizeParameterName() {
 		assertThatIllegalArgumentException()
-				.isThrownBy(() -> new CursorPageableHandlerMethodArgumentResolver().setSizeParameterName(null));
+			.isThrownBy(() -> new CursorPageableHandlerMethodArgumentResolver().setSizeParameterName(null));
 	}
 
 	@Test
@@ -106,7 +106,7 @@ class CursorPageableHandlerMethodArgumentResolverUnitTests extends CursorPageabl
 				Sample.class.getMethod("invalidDefaultPageSize", CursorPageable.class), 0);
 
 		assertThatIllegalStateException().isThrownBy(() -> assertSupportedAndResult(parameter, DEFAULT_PAGE_REQUEST)) //
-				.withMessageContaining("invalidDefaultPageSize");
+			.withMessageContaining("invalidDefaultPageSize");
 	}
 
 	@Test
@@ -156,7 +156,7 @@ class CursorPageableHandlerMethodArgumentResolverUnitTests extends CursorPageabl
 		request.addParameter("continuationToken", "notarealtoken");
 
 		assertThat(resolver.resolveArgument(supportedMethodParameter, null, new ServletWebRequest(request), null))
-				.isEqualTo(CursorPageRequest.of("notarealtoken", 20, null, Sort.Direction.DESC));
+			.isEqualTo(CursorPageRequest.of("notarealtoken", 20, null, Sort.Direction.DESC));
 	}
 
 	@Test

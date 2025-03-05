@@ -77,7 +77,7 @@ class SpringCursorPaginationHateoasConfigurationIntegrationTests {
 	void picksUpCursorHateoasPageableResolverCustomizer() {
 
 		ApplicationContext context = WebTestUtils
-				.createApplicationContext(CursorPageableResolverCustomizerConfig.class);
+			.createApplicationContext(CursorPageableResolverCustomizerConfig.class);
 		List<String> names = Arrays.asList(context.getBeanDefinitionNames());
 		HateoasCursorPageableHandlerMethodArgumentResolver resolver = context.getBean("hateoasCursorPageableResolver",
 				HateoasCursorPageableHandlerMethodArgumentResolver.class);

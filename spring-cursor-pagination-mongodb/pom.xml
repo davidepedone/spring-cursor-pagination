@@ -8,7 +8,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>spring-cursor-pagination-mongodb</artifactId>
-
+    <properties>
+        <embedded.mongo.version>4.18.1</embedded.mongo.version>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -19,11 +21,6 @@
             <groupId>it.davidepedone</groupId>
             <artifactId>spring-cursor-pagination-common</artifactId>
             <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>de.flapdoodle.embed</groupId>
-            <artifactId>de.flapdoodle.embed.mongo</artifactId>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 

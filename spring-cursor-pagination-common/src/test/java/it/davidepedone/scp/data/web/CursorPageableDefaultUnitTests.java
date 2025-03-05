@@ -17,6 +17,7 @@ package it.davidepedone.scp.data.web;
 
 import it.davidepedone.scp.data.CursorPageRequest;
 import it.davidepedone.scp.data.CursorPageable;
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.domain.Sort;
@@ -26,7 +27,6 @@ import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 
-import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.Method;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -113,8 +113,8 @@ abstract class CursorPageableDefaultUnitTests {
 		assertThat(resolver.supportsParameter(parameter)).isTrue();
 
 		assertThatIllegalStateException()
-				.isThrownBy(() -> resolver.resolveArgument(parameter, null, getWebRequest(), null)) //
-				.withMessageContaining("unique");
+			.isThrownBy(() -> resolver.resolveArgument(parameter, null, getWebRequest(), null)) //
+			.withMessageContaining("unique");
 	}
 
 	@Test
@@ -127,8 +127,8 @@ abstract class CursorPageableDefaultUnitTests {
 		assertThat(resolver.supportsParameter(parameter)).isTrue();
 
 		assertThatIllegalStateException()
-				.isThrownBy(() -> resolver.resolveArgument(parameter, null, getWebRequest(), null)) //
-				.withMessageContaining("Ambiguous");
+			.isThrownBy(() -> resolver.resolveArgument(parameter, null, getWebRequest(), null)) //
+			.withMessageContaining("Ambiguous");
 	}
 
 	protected void assertSupportedAndResult(MethodParameter parameter, CursorPageable pageable) throws Exception {

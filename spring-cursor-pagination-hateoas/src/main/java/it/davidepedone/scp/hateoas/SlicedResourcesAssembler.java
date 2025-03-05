@@ -213,11 +213,11 @@ public class SlicedResourcesAssembler<T>
 		UriComponentsBuilder builder = UriComponentsBuilder.fromUri(base.expand());
 		builder.replaceQueryParam(pageableResolver.getContinuationTokenParameterName());
 
-		resources.add(
-				createLink(UriTemplate.of(builder.build().toString()), null, null, IanaLinkRelations.FIRST.value()));
+		resources
+			.add(createLink(UriTemplate.of(builder.build().toString()), null, null, IanaLinkRelations.FIRST.value()));
 
 		Link selfLink = link.map(Link::withSelfRel)//
-				.orElseGet(() -> createLink(base, null, IanaLinkRelations.SELF.value()));
+			.orElseGet(() -> createLink(base, null, IanaLinkRelations.SELF.value()));
 
 		resources.add(selfLink);
 

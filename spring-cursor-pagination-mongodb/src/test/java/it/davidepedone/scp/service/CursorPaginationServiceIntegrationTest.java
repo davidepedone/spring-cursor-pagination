@@ -45,7 +45,7 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * @author Davide Pedone
  */
-@DataMongoTest
+@DataMongoTest()
 @ExtendWith(SpringExtension.class)
 class CursorPaginationServiceIntegrationTest {
 
